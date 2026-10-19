@@ -2,7 +2,7 @@
 
 > Aprende a pensar paso a paso.
 
-**Estado:** En desarrollo · **Stack:** Flutter + Dart
+**Estado:** En desarrollo · **Stack:** Flutter + Dart · **Última etapa:** Mock estático de Inicio
 
 ## Descripción
 
@@ -38,30 +38,41 @@ También impulsa el desarrollo de habilidades técnicas para el desarrollo de so
 
 La carpeta [`/docs`](docs/) contiene todos los bocetos de alta fidelidad de la aplicación. Cada imagen representa una pantalla o flujo del producto.
 
-| Pantalla | Boceto | Descripción |
-| --- | --- | --- |
-| Onboarding | <img src="docs/login.png" width="180" alt="Pantalla de bienvenida de FlowApp"> | Pantalla de bienvenida con el logo, una muestra de diagrama de flujo y los accesos para comenzar o iniciar sesión. |
-| Inicio | <img src="docs/inicio.png" width="180" alt="Pantalla de inicio de FlowApp"> | Dashboard con saludo, racha, monedas, ruta actual, progreso semanal, misión recomendada y meta diaria. |
-| Aprender | <img src="docs/aprender-1.png" width="180" alt="Ruta de aprendizaje de FlowApp"> | Ruta de aprendizaje por unidades: diagramas lineales, condicionales, ciclos, funciones y recursividad. |
-| Aprender (detalle) | <img src="docs/aprender-2.png" width="180" alt="Detalle de la ruta de aprendizaje"> | Vista extendida de la ruta con lecciones completadas, lección actual y unidades bloqueadas. |
-| Comunidad | <img src="docs/comunidad-1.png" width="180" alt="Feed de la comunidad"> | Feed con pestañas "Para ti", "Siguiendo" y "Workshop", reto semanal y publicaciones con diagramas. |
-| Comunidad (detalle) | <img src="docs/comunidad-2.png" width="180" alt="Detalle del feed de la comunidad"> | Vista completa del feed con likes, comentarios y acción de Remix sobre los diagramas publicados. |
-| Perfil | <img src="docs/perfil-1.png" width="180" alt="Perfil del usuario"> | Perfil con nivel, estadísticas, logros desbloqueados, heatmap de actividad y diagramas propios. |
-| Perfil (detalle) | <img src="docs/perfil-2.png" width="180" alt="Detalle del perfil del usuario"> | Vista extendida del perfil con la sección de logros, actividad y "Mis diagramas". |
-| Tienda | <img src="docs/tienda.png" width="180" alt="Tienda de skins"> | Tienda con saldo de monedas y skins disponibles: Clásico, Pixel Art y Cyber. |
+| Pantalla | Boceto | Descripción | Estado |
+| --- | --- | --- | --- |
+| Onboarding | <img src="docs/login.png" width="180" alt="Pantalla de bienvenida de FlowApp"> | Pantalla de bienvenida con el logo, una muestra de diagrama de flujo y los accesos para comenzar o iniciar sesión. | Pendiente |
+| Inicio | <img src="docs/inicio.png" width="180" alt="Pantalla de inicio de FlowApp"> | Dashboard con saludo, racha, monedas, ruta actual, progreso semanal, misión recomendada y meta diaria. | **Mock estático** |
+| Aprender | <img src="docs/aprender-1.png" width="180" alt="Ruta de aprendizaje de FlowApp"> | Ruta de aprendizaje por unidades: diagramas lineales, condicionales, ciclos, funciones y recursividad. | Pendiente |
+| Aprender (detalle) | <img src="docs/aprender-2.png" width="180" alt="Detalle de la ruta de aprendizaje"> | Vista extendida de la ruta con lecciones completadas, lección actual y unidades bloqueadas. | Pendiente |
+| Comunidad | <img src="docs/comunidad-1.png" width="180" alt="Feed de la comunidad"> | Feed con pestañas "Para ti", "Siguiendo" y "Workshop", reto semanal y publicaciones con diagramas. | Pendiente |
+| Comunidad (detalle) | <img src="docs/comunidad-2.png" width="180" alt="Detalle del feed de la comunidad"> | Vista completa del feed con likes, comentarios y acción de Remix sobre los diagramas publicados. | Pendiente |
+| Perfil | <img src="docs/perfil-1.png" width="180" alt="Perfil del usuario"> | Perfil con nivel, estadísticas, logros desbloqueados, heatmap de actividad y diagramas propios. | Pendiente |
+| Perfil (detalle) | <img src="docs/perfil-2.png" width="180" alt="Detalle del perfil del usuario"> | Vista extendida del perfil con la sección de logros, actividad y "Mis diagramas". | Pendiente |
+| Tienda | <img src="docs/tienda.png" width="180" alt="Tienda de skins"> | Tienda con saldo de monedas y skins disponibles: Clásico, Pixel Art y Cyber. | Pendiente |
 
 ## Módulos implementados
 
-Actualmente el repositorio se encuentra en su fase inicial. El código existente corresponde a la plantilla base de Flutter.
+El repositorio ya cuenta con la estructura base de la aplicación, el tema visual y la primera pantalla del producto, construida como mock estático.
 
 | Módulo | Estado | Notas |
 | --- | --- | --- |
 | Proyecto Flutter multiplataforma | Implementado | Soporte para Android, iOS, Web, Windows, macOS y Linux. |
-| Estructura base de la aplicación | Implementado | `lib/main.dart` con la aplicación y pantalla de ejemplo generada por Flutter. |
-| Pantalla de ejemplo (contador) | Implementado | Plantilla por defecto; será reemplazada por las pantallas reales. |
-| Módulos funcionales de FlowApp | Pendiente | Ninguna pantalla o funcionalidad del producto está implementada todavía. |
+| Tema visual base | Implementado | Paleta extraída de los bocetos de [`/docs`](docs/) y estilos de texto centralizados. |
+| Shell de navegación | Implementado (mock) | Barra inferior con las pestañas Inicio, Aprender, Comunidad, Tienda y Perfil. Las cuatro últimas muestran placeholders. |
+| Pantalla Inicio | Implementado (mock) | Saludo, racha, monedas, ruta actual, progreso semanal, misión recomendada y meta diaria con datos estáticos. |
+| Módulos funcionales de FlowApp | Pendiente | Sin lógica de negocio, persistencia ni backend todavía. |
 
-> **Nota:** las pantallas de la carpeta [`/docs`](docs/) son diseños y bocetos de referencia, no funcionalidades implementadas.
+> **Nota:** las pantallas de la carpeta [`/docs`](docs/) son diseños y bocetos de referencia. La pantalla Inicio replica el boceto con datos estáticos; el resto aún no está implementado.
+
+### Detalle de la implementación actual
+
+- **Tema:** colores y estilos centralizados en [`lib/core/theme/`](lib/core/theme/), con paleta oscura, verde neón y azul cian extraídos de los bocetos.
+- **Inicio:** composición responsive en [`lib/features/home/home_screen.dart`](lib/features/home/home_screen.dart), con ancho máximo de 480 px en pantallas grandes y desplazamiento vertical en pantallas pequeñas.
+- **Widgets:** header con racha y monedas, tarjeta de ruta actual, estadísticas, misión recomendada y meta diaria, ubicados en [`lib/features/home/widgets/`](lib/features/home/widgets/).
+- **Navegación:** shell con `IndexedStack` y barra inferior de cinco pestañas en [`lib/core/navigation/app_shell.dart`](lib/core/navigation/app_shell.dart) y [`lib/shared/widgets/flow_bottom_nav.dart`](lib/shared/widgets/flow_bottom_nav.dart).
+- **Placeholders:** Aprender, Comunidad, Tienda y Perfil muestran una pantalla “Próximamente” en [`lib/features/placeholder/`](lib/features/placeholder/).
+- **Datos:** todos los valores de Inicio (`7`, `240`, `38%`, `1,250 XP`, `2/3`, etc.) son constantes locales; no hay persistencia ni backend.
+- **Dependencias:** no se agregaron paquetes externos; solo se usa Flutter y `flutter_test`.
 
 ## Pendientes por hacer
 
@@ -81,8 +92,8 @@ Actualmente el repositorio se encuentra en su fase inicial. El código existente
 
 ### Navegación y pantallas principales
 
-- [ ] Configurar la navegación principal con barra inferior.
-- [ ] Implementar la pantalla de Inicio.
+- [x] Configurar la navegación principal con barra inferior.
+- [x] Implementar la pantalla de Inicio como mock estático.
 - [ ] Implementar la pantalla de Aprender.
 - [ ] Implementar la pantalla de Comunidad.
 - [ ] Implementar la pantalla de Tienda.
@@ -125,7 +136,8 @@ Actualmente el repositorio se encuentra en su fase inicial. El código existente
 
 - [ ] Definir e implementar el backend y la API.
 - [ ] Implementar la persistencia de datos.
-- [ ] Implementar pruebas unitarias y de widgets.
+- [x] Implementar pruebas de widgets para la pantalla Inicio.
+- [ ] Implementar pruebas unitarias de la lógica de negocio.
 - [ ] Configurar integración continua y despliegue.
 
 ## Stack y estructura
@@ -138,7 +150,15 @@ Actualmente el repositorio se encuentra en su fase inicial. El código existente
 flow_app/
 ├── docs/          # Bocetos de las pantallas
 ├── lib/
-│   └── main.dart  # Punto de entrada de la aplicación
+│   ├── core/
+│   │   ├── navigation/   # Shell de navegación
+│   │   └── theme/        # Colores y tema
+│   ├── features/
+│   │   ├── home/         # Pantalla Inicio y widgets
+│   │   └── placeholder/  # Pantallas "Próximamente"
+│   ├── shared/widgets/   # Fondo y barra inferior
+│   ├── app.dart          # Configuración de la aplicación
+│   └── main.dart         # Punto de entrada
 ├── test/          # Pruebas
 ├── android/       # Proyecto Android
 ├── ios/           # Proyecto iOS
@@ -157,12 +177,15 @@ flutter pub get
 flutter run
 ```
 
-### Pruebas
+### Pruebas y análisis
 
 ```bash
+flutter analyze
 flutter test
 ```
 
+Las pruebas actuales de [`test/widget_test.dart`](test/widget_test.dart) validan el contenido estático de Inicio, la navegación hacia los placeholders y la ausencia de desbordamientos en una pantalla pequeña.
+
 ## Estado del proyecto
 
-FlowApp se encuentra en fase de diseño y estructuración. Los bocetos de la experiencia están definidos en [`/docs`](docs/), mientras que la implementación de los módulos funcionales está pendiente.
+FlowApp se encuentra en fase de diseño y estructuración. Los bocetos de la experiencia están definidos en [`/docs`](docs/), el tema visual y el shell de navegación están configurados, y la pantalla Inicio ya está implementada como mock estático. Actualmente `flutter analyze` no reporta problemas y las tres pruebas de widgets pasan. La lógica de negocio, la persistencia, el backend y el resto de pantallas están pendientes.
