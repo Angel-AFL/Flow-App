@@ -35,7 +35,7 @@ void main() {
   testWidgets('la barra inferior navega a los placeholders', (tester) async {
     await pumpApp(tester);
 
-    await tester.tap(find.text('Tienda'));
+    await tester.tap(find.text('Comunidad'));
     await tester.pumpAndSettle();
 
     expect(find.text('PRÓXIMAMENTE'), findsOneWidget);
