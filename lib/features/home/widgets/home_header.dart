@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/theme/app_colors.dart';
-import 'flow_logo.dart';
+import '../../../shared/widgets/flow_logo.dart';
 
 class HomeHeader extends StatelessWidget {
   const HomeHeader({super.key});

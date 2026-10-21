@@ -37,7 +37,7 @@ void main() {
   ) async {
     await pumpApp(tester);
 
-    await tester.tap(find.text('Tienda'));
+    await tester.tap(find.text('Comunidad'));
     await tester.pumpAndSettle();
 
     expect(find.text('PRÓXIMAMENTE'), findsOneWidget);
