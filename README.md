@@ -2,7 +2,7 @@
 
 > Aprende a pensar paso a paso.
 
-**Estado:** En desarrollo · **Stack:** Flutter + Dart · **Última etapa:** Mock estático de Inicio
+**Estado:** En desarrollo · **Stack:** Flutter + Dart · **Última etapa:** Mocks estáticos de Inicio y Comunidad
 
 ## Descripción
 
@@ -44,8 +44,8 @@ La carpeta [`/docs`](docs/) contiene todos los bocetos de alta fidelidad de la a
 | Inicio | <img src="docs/inicio.png" width="180" alt="Pantalla de inicio de FlowApp"> | Dashboard con saludo, racha, monedas, ruta actual, progreso semanal, misión recomendada y meta diaria. | **Mock estático** |
 | Aprender | <img src="docs/aprender-1.png" width="180" alt="Ruta de aprendizaje de FlowApp"> | Ruta de aprendizaje por unidades: diagramas lineales, condicionales, ciclos, funciones y recursividad. | Pendiente |
 | Aprender (detalle) | <img src="docs/aprender-2.png" width="180" alt="Detalle de la ruta de aprendizaje"> | Vista extendida de la ruta con lecciones completadas, lección actual y unidades bloqueadas. | Pendiente |
-| Comunidad | <img src="docs/comunidad-1.png" width="180" alt="Feed de la comunidad"> | Feed con pestañas "Para ti", "Siguiendo" y "Workshop", reto semanal y publicaciones con diagramas. | Pendiente |
-| Comunidad (detalle) | <img src="docs/comunidad-2.png" width="180" alt="Detalle del feed de la comunidad"> | Vista completa del feed con likes, comentarios y acción de Remix sobre los diagramas publicados. | Pendiente |
+| Comunidad | <img src="docs/comunidad-1.png" width="180" alt="Feed de la comunidad"> | Feed con pestañas "Para ti", "Siguiendo" y "Workshop", reto semanal y publicaciones con diagramas. | **Mock estático** |
+| Comunidad (detalle) | <img src="docs/comunidad-2.png" width="180" alt="Detalle del feed de la comunidad"> | Vista completa del feed con likes, comentarios y acción de Remix sobre los diagramas publicados. | **Mock estático** |
 | Perfil | <img src="docs/perfil-1.png" width="180" alt="Perfil del usuario"> | Perfil con nivel, estadísticas, logros desbloqueados, heatmap de actividad y diagramas propios. | Pendiente |
 | Perfil (detalle) | <img src="docs/perfil-2.png" width="180" alt="Detalle del perfil del usuario"> | Vista extendida del perfil con la sección de logros, actividad y "Mis diagramas". | Pendiente |
 | Tienda | <img src="docs/tienda.png" width="180" alt="Tienda de skins"> | Tienda con saldo de monedas y skins disponibles: Clásico, Pixel Art y Cyber. | Pendiente |
@@ -58,20 +58,22 @@ El repositorio ya cuenta con la estructura base de la aplicación, el tema visua
 | --- | --- | --- |
 | Proyecto Flutter multiplataforma | Implementado | Soporte para Android, iOS, Web, Windows, macOS y Linux. |
 | Tema visual base | Implementado | Paleta extraída de los bocetos de [`/docs`](docs/) y estilos de texto centralizados. |
-| Shell de navegación | Implementado (mock) | Barra inferior con las pestañas Inicio, Aprender, Comunidad, Tienda y Perfil. Las cuatro últimas muestran placeholders. |
+| Shell de navegación | Implementado (mock) | Barra inferior con las pestañas Inicio, Aprender, Comunidad, Tienda y Perfil. Aprender, Tienda y Perfil muestran placeholders. |
 | Pantalla Inicio | Implementado (mock) | Saludo, racha, monedas, ruta actual, progreso semanal, misión recomendada y meta diaria con datos estáticos. |
+| Pantalla Comunidad | Implementado (mock) | Feed con pestañas, reto semanal, publicaciones con diagramas, likes locales y feedback para comentarios, Remix y menú de publicación. |
 | Módulos funcionales de FlowApp | Pendiente | Sin lógica de negocio, persistencia ni backend todavía. |
 
-> **Nota:** las pantallas de la carpeta [`/docs`](docs/) son diseños y bocetos de referencia. La pantalla Inicio replica el boceto con datos estáticos; el resto aún no está implementado.
+> **Nota:** las pantallas de la carpeta [`/docs`](docs/) son diseños y bocetos de referencia. Inicio y Comunidad replican sus bocetos con datos estáticos; Aprender, Tienda y Perfil aún no están implementados.
 
 ### Detalle de la implementación actual
 
 - **Tema:** colores y estilos centralizados en [`lib/core/theme/`](lib/core/theme/), con paleta oscura, verde neón y azul cian extraídos de los bocetos.
 - **Inicio:** composición responsive en [`lib/features/home/home_screen.dart`](lib/features/home/home_screen.dart), con ancho máximo de 480 px en pantallas grandes y desplazamiento vertical en pantallas pequeñas.
 - **Widgets:** header con racha y monedas, tarjeta de ruta actual, estadísticas, misión recomendada y meta diaria, ubicados en [`lib/features/home/widgets/`](lib/features/home/widgets/).
+- **Comunidad:** feed en [`lib/features/community/community_screen.dart`](lib/features/community/community_screen.dart), con datos mock por pestaña, banner de workshop, publicaciones y previsualizaciones de diagramas en [`lib/features/community/widgets/`](lib/features/community/widgets/). Los likes se actualizan localmente y las acciones pendientes muestran un `SnackBar`.
 - **Navegación:** shell con `IndexedStack` y barra inferior de cinco pestañas en [`lib/core/navigation/app_shell.dart`](lib/core/navigation/app_shell.dart) y [`lib/shared/widgets/flow_bottom_nav.dart`](lib/shared/widgets/flow_bottom_nav.dart).
-- **Placeholders:** Aprender, Comunidad, Tienda y Perfil muestran una pantalla “Próximamente” en [`lib/features/placeholder/`](lib/features/placeholder/).
-- **Datos:** todos los valores de Inicio (`7`, `240`, `38%`, `1,250 XP`, `2/3`, etc.) son constantes locales; no hay persistencia ni backend.
+- **Placeholders:** Aprender, Tienda y Perfil muestran una pantalla “Próximamente” en [`lib/features/placeholder/`](lib/features/placeholder/).
+- **Datos:** todos los valores de Inicio y Comunidad (`7`, `240`, `38%`, `1,250 XP`, `2/3`, `48 likes`, etc.) son constantes locales; no hay persistencia ni backend.
 - **Dependencias:** no se agregaron paquetes externos; solo se usa Flutter y `flutter_test`.
 
 ## Pendientes por hacer
@@ -95,7 +97,7 @@ El repositorio ya cuenta con la estructura base de la aplicación, el tema visua
 - [x] Configurar la navegación principal con barra inferior.
 - [x] Implementar la pantalla de Inicio como mock estático.
 - [ ] Implementar la pantalla de Aprender.
-- [ ] Implementar la pantalla de Comunidad.
+- [x] Implementar la pantalla de Comunidad (mock estático).
 - [ ] Implementar la pantalla de Tienda.
 - [ ] Implementar la pantalla de Perfil.
 
@@ -118,9 +120,9 @@ El repositorio ya cuenta con la estructura base de la aplicación, el tema visua
 
 ### Comunidad
 
-- [ ] Implementar el feed de ejecuciones.
-- [ ] Implementar likes y comentarios.
-- [ ] Implementar la acción de Remix/Fork.
+- [x] Implementar el feed de ejecuciones (mock local).
+- [x] Implementar likes locales en el feed (sin persistencia).
+- [ ] Implementar comentarios y la acción de Remix/Fork.
 - [ ] Implementar el Workshop y el creador de niveles.
 - [ ] Implementar el sistema de reseñas de niveles.
 - [ ] Implementar los perfiles públicos y el heatmap de actividad.
@@ -155,6 +157,7 @@ flow_app/
 │   │   └── theme/        # Colores y tema
 │   ├── features/
 │   │   ├── home/         # Pantalla Inicio y widgets
+│   │   ├── community/    # Pantalla Comunidad, modelos y widgets
 │   │   └── placeholder/  # Pantallas "Próximamente"
 │   ├── shared/widgets/   # Fondo y barra inferior
 │   ├── app.dart          # Configuración de la aplicación
@@ -184,8 +187,8 @@ flutter analyze
 flutter test
 ```
 
-Las pruebas actuales de [`test/widget_test.dart`](test/widget_test.dart) validan el contenido estático de Inicio, la navegación hacia los placeholders y la ausencia de desbordamientos en una pantalla pequeña.
+Las pruebas actuales de [`test/widget_test.dart`](test/widget_test.dart) validan el contenido estático de Inicio, el feed y las pestañas de Comunidad, el like local, el feedback de Remix, la navegación hacia los placeholders y la ausencia de desbordamientos en una pantalla pequeña.
 
 ## Estado del proyecto
 
-FlowApp se encuentra en fase de diseño y estructuración. Los bocetos de la experiencia están definidos en [`/docs`](docs/), el tema visual y el shell de navegación están configurados, y la pantalla Inicio ya está implementada como mock estático. Actualmente `flutter analyze` no reporta problemas y las tres pruebas de widgets pasan. La lógica de negocio, la persistencia, el backend y el resto de pantallas están pendientes.
+FlowApp se encuentra en fase de diseño y estructuración. Los bocetos de la experiencia están definidos en [`/docs`](docs/), el tema visual y el shell de navegación están configurados, y las pantallas Inicio y Comunidad ya están implementadas como mocks estáticos. Actualmente `flutter analyze` no reporta problemas y las siete pruebas de widgets pasan. La lógica de negocio, la persistencia, el backend y el resto de pantallas están pendientes.

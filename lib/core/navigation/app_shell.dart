@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../features/community/community_screen.dart';
 import '../../features/home/home_screen.dart';
 import '../../features/placeholder/coming_soon_screen.dart';
 import '../../shared/widgets/flow_background.dart';
@@ -24,12 +25,7 @@ class _AppShellState extends State<AppShell> {
           'La ruta de aprendizaje, las unidades y los retos estarán disponibles pronto.',
       icon: Icons.menu_book_rounded,
     ),
-    ComingSoonScreen(
-      title: 'Comunidad',
-      message:
-          'El feed de ejecuciones, los remixes y el workshop llegarán en la siguiente etapa.',
-      icon: Icons.groups_rounded,
-    ),
+    CommunityScreen(),
     ComingSoonScreen(
       title: 'Tienda',
       message:
