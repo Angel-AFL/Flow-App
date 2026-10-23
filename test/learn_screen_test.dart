@@ -14,6 +14,9 @@ void main() {
     addTearDown(tester.view.resetDevicePixelRatio);
 
     await tester.pumpWidget(const FlowApp());
+    await tester.ensureVisible(find.text('Comenzar'));
+    await tester.tap(find.text('Comenzar'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Aprender'));
     await tester.pumpAndSettle();
   }

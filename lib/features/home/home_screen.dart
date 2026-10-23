@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../../shared/widgets/section_header.dart';
+import '../../shared/widgets/stat_card.dart';
 import 'widgets/current_route_card.dart';
 import 'widgets/daily_goal_card.dart';
 import 'widgets/home_header.dart';
 import 'widgets/mission_card.dart';
-import 'widgets/section_header.dart';
-import 'widgets/stat_card.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
