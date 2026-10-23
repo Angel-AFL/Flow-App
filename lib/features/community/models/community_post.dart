@@ -1,26 +1,8 @@
 import 'package:flutter/material.dart';
 
-enum DiagramPreviewType { linear, decision }
+import '../../../shared/models/diagram_spec.dart';
 
-class DiagramSpec {
-  const DiagramSpec({
-    required this.type,
-    this.startLabel = 'Inicio',
-    this.processLabel = 'Mostrar mensaje',
-    this.decisionLabel = 'Es > 0',
-    this.yesLabel = 'Sí',
-    this.noLabel = 'No',
-    this.endLabel = 'Fin',
-  });
-
-  final DiagramPreviewType type;
-  final String startLabel;
-  final String processLabel;
-  final String decisionLabel;
-  final String yesLabel;
-  final String noLabel;
-  final String endLabel;
-}
+export '../../../shared/models/diagram_spec.dart';
 
 class CommunityPost {
   const CommunityPost({

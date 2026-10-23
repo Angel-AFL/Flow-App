@@ -2,13 +2,14 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
-import '../../../core/theme/app_colors.dart';
-import '../models/community_post.dart';
+import '../../core/theme/app_colors.dart';
+import '../models/diagram_spec.dart';
 
 class DiagramPreview extends StatelessWidget {
-  const DiagramPreview({super.key, required this.diagram});
+  const DiagramPreview({super.key, required this.diagram, this.height});
 
   final DiagramSpec diagram;
+  final double? height;
 
   @override
   Widget build(BuildContext context) {
@@ -21,7 +22,7 @@ class DiagramPreview extends StatelessWidget {
                 '${diagram.processLabel}, ${diagram.endLabel}'
           : 'Diagrama de flujo con decisión: ${diagram.decisionLabel}',
       child: Container(
-        height: isLinear ? 152 : 188,
+        height: height ?? (isLinear ? 152 : 188),
         decoration: BoxDecoration(
           color: const Color(0xFF0D1A2A),
           borderRadius: BorderRadius.circular(12),
@@ -36,9 +37,12 @@ class DiagramPreview extends StatelessWidget {
             children: [
               const CustomPaint(painter: _DotGridPainter()),
               Center(
-                child: isLinear
-                    ? _LinearFlow(diagram: diagram)
-                    : _DecisionFlow(diagram: diagram),
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: isLinear
+                      ? _LinearFlow(diagram: diagram)
+                      : _DecisionFlow(diagram: diagram),
+                ),
               ),
             ],
           ),

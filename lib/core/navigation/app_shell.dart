@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import '../../features/community/community_screen.dart';
 import '../../features/home/home_screen.dart';
 import '../../features/learn/learn_screen.dart';
-import '../../features/placeholder/coming_soon_screen.dart';
+import '../../features/profile/profile_screen.dart';
 import '../../features/store/store_screen.dart';
 import '../../shared/widgets/flow_background.dart';
 import '../../shared/widgets/flow_bottom_nav.dart';
@@ -20,19 +21,9 @@ class _AppShellState extends State<AppShell> {
   static const List<Widget> _screens = [
     HomeScreen(),
     LearnScreen(),
-    ComingSoonScreen(
-      title: 'Comunidad',
-      message:
-          'El feed de ejecuciones, los remixes y el workshop llegarán en la siguiente etapa.',
-      icon: Icons.groups_rounded,
-    ),
+    CommunityScreen(),
     StoreScreen(),
-    ComingSoonScreen(
-      title: 'Perfil',
-      message:
-          'Tus logros, estadísticas, heatmap de actividad y diagramas se mostrarán aquí.',
-      icon: Icons.person_rounded,
-    ),
+    ProfileScreen(),
   ];
 
   @override

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../shared/widgets/diagram_preview.dart';
 import '../models/community_post.dart';
-import 'diagram_preview.dart';
 
 class PostCard extends StatefulWidget {
   const PostCard({super.key, required this.post, required this.onFeedback});

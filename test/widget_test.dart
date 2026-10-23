@@ -4,7 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:flow_app/app.dart';
 
 void main() {
-  Future<void> pumpApp(
+  Future<void> pumpWelcome(
     WidgetTester tester, {
     Size size = const Size(390, 844),
   }) async {
@@ -14,6 +14,16 @@ void main() {
     addTearDown(tester.view.resetDevicePixelRatio);
 
     await tester.pumpWidget(const FlowApp());
+  }
+
+  Future<void> pumpApp(
+    WidgetTester tester, {
+    Size size = const Size(390, 844),
+  }) async {
+    await pumpWelcome(tester, size: size);
+    await tester.ensureVisible(find.text('Comenzar'));
+    await tester.tap(find.text('Comenzar'));
+    await tester.pumpAndSettle();
   }
 
   testWidgets('renderiza el contenido estático de Inicio', (tester) async {
@@ -32,15 +42,14 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('la barra inferior navega a los módulos pendientes', (
-    tester,
-  ) async {
+  testWidgets('la barra inferior navega a Perfil', (tester) async {
     await pumpApp(tester);
 
-    await tester.tap(find.text('Comunidad'));
+    await tester.tap(find.text('Perfil'));
     await tester.pumpAndSettle();
 
-    expect(find.text('PRÓXIMAMENTE'), findsOneWidget);
+    expect(find.text('Estudiante Flow'), findsOneWidget);
+    expect(find.text('Logros'), findsOneWidget);
     expect(find.text('¡Hola, estudiante!'), findsNothing);
     expect(tester.takeException(), isNull);
   });
