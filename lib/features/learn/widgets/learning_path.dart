@@ -64,7 +64,14 @@ const List<_PathStep> _steps = [
 ];
 
 class LearningPath extends StatelessWidget {
-  const LearningPath({super.key});
+  const LearningPath({
+    super.key,
+    this.lessonCompleted = false,
+    this.onCurrentLessonTap,
+  });
+
+  final bool lessonCompleted;
+  final VoidCallback? onCurrentLessonTap;
 
   static const _rowHeight = 100.0;
   static const _nodeSize = 54.0;
@@ -75,7 +82,19 @@ class LearningPath extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final centers = List<Offset>.generate(_steps.length, (index) {
+    final steps = [
+      for (final step in _steps)
+        if (step.kind == _StepKind.currentLesson && lessonCompleted)
+          _PathStep(
+            kind: _StepKind.completedLesson,
+            kicker: step.kicker,
+            title: step.title,
+          )
+        else
+          step,
+    ];
+
+    final centers = List<Offset>.generate(steps.length, (index) {
       final left = _nodeLeft + (index.isOdd ? _indent : 0);
       return Offset(
         left + _nodeSize / 2,
@@ -84,7 +103,7 @@ class LearningPath extends StatelessWidget {
     });
 
     return SizedBox(
-      height: _steps.length * _rowHeight,
+      height: steps.length * _rowHeight,
       child: Stack(
         clipBehavior: Clip.none,
         children: [
@@ -93,8 +112,14 @@ class LearningPath extends StatelessWidget {
               child: CustomPaint(painter: _PathConnectorPainter(centers)),
             ),
           ),
-          for (var index = 0; index < _steps.length; index++)
-            _PathRow(index: index, step: _steps[index]),
+          for (var index = 0; index < steps.length; index++)
+            _PathRow(
+              index: index,
+              step: steps[index],
+              onTap: steps[index].kind == _StepKind.currentLesson
+                  ? onCurrentLessonTap
+                  : null,
+            ),
         ],
       ),
     );
@@ -102,44 +127,59 @@ class LearningPath extends StatelessWidget {
 }
 
 class _PathRow extends StatelessWidget {
-  const _PathRow({required this.index, required this.step});
+  const _PathRow({required this.index, required this.step, this.onTap});
 
   final int index;
   final _PathStep step;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
     final left =
         LearningPath._nodeLeft + (index.isOdd ? LearningPath._indent : 0);
+    final content = Stack(
+      clipBehavior: Clip.none,
+      children: [
+        Positioned(
+          left: left,
+          top: LearningPath._nodeTop,
+          child: _PathNode(
+            kind: step.kind,
+            label: '${step.kicker} ${step.title}',
+          ),
+        ),
+        Positioned(
+          left: left + LearningPath._nodeSize + LearningPath._labelGap,
+          top: 0,
+          bottom: 0,
+          right: 0,
+          child: Align(
+            alignment: Alignment.centerLeft,
+            child: _PathLabel(step: step),
+          ),
+        ),
+      ],
+    );
 
     return Positioned(
       top: index * LearningPath._rowHeight,
       left: 0,
       right: 0,
       height: LearningPath._nodeTop * 2 + LearningPath._nodeSize,
-      child: Stack(
-        clipBehavior: Clip.none,
-        children: [
-          Positioned(
-            left: left,
-            top: LearningPath._nodeTop,
-            child: _PathNode(
-              kind: step.kind,
-              label: '${step.kicker} ${step.title}',
+      child: onTap == null
+          ? content
+          : Semantics(
+              button: true,
+              label: 'Abrir ${step.kicker.toLowerCase()}: ${step.title}',
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: onTap,
+                  borderRadius: BorderRadius.circular(16),
+                  child: content,
+                ),
+              ),
             ),
-          ),
-          Positioned(
-            left: left + LearningPath._nodeSize + LearningPath._labelGap,
-            top: 0,
-            bottom: 0,
-            right: 0,
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: _PathLabel(step: step),
-            ),
-          ),
-        ],
-      ),
     );
   }
 }
