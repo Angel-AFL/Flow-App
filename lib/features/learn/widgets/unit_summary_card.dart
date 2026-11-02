@@ -5,12 +5,21 @@ import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
 
 class UnitSummaryCard extends StatelessWidget {
-  const UnitSummaryCard({super.key});
+  const UnitSummaryCard({
+    super.key,
+    this.progress = 0.67,
+    this.completedLessons = 2,
+    this.totalLessons = 3,
+  });
 
-  static const _progress = 0.67;
+  final double progress;
+  final int completedLessons;
+  final int totalLessons;
 
   @override
   Widget build(BuildContext context) {
+    final percentage = (progress * 100).round();
+
     return Container(
       padding: const EdgeInsets.fromLTRB(18, 16, 18, 16),
       decoration: BoxDecoration(
@@ -20,11 +29,11 @@ class UnitSummaryCard extends StatelessWidget {
       ),
       child: Row(
         children: [
-          const Expanded(
+          Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
+                const Text(
                   'UNIDAD 1',
                   style: TextStyle(
                     color: AppColors.secondary,
@@ -33,8 +42,8 @@ class UnitSummaryCard extends StatelessWidget {
                     letterSpacing: 1.2,
                   ),
                 ),
-                SizedBox(height: 7),
-                Text(
+                const SizedBox(height: 7),
+                const Text(
                   'Diagramas lineales',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -45,12 +54,12 @@ class UnitSummaryCard extends StatelessWidget {
                     height: 1.15,
                   ),
                 ),
-                SizedBox(height: 5),
+                const SizedBox(height: 5),
                 Text(
-                  '2 de 3 lecciones',
+                  '$completedLessons de $totalLessons lecciones',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
+                  style: const TextStyle(
                     color: AppColors.textMuted,
                     fontSize: 12,
                     fontWeight: FontWeight.w500,
@@ -61,7 +70,7 @@ class UnitSummaryCard extends StatelessWidget {
           ),
           const SizedBox(width: 14),
           Semantics(
-            label: 'Progreso de la unidad 1: 67 por ciento',
+            label: 'Progreso de la unidad 1: $percentage por ciento',
             child: SizedBox(
               width: 62,
               height: 62,
@@ -70,11 +79,11 @@ class UnitSummaryCard extends StatelessWidget {
                 children: [
                   CustomPaint(
                     size: const Size.square(62),
-                    painter: const _UnitRingPainter(_progress),
+                    painter: _UnitRingPainter(progress),
                   ),
-                  const Text(
-                    '67%',
-                    style: TextStyle(
+                  Text(
+                    '$percentage%',
+                    style: const TextStyle(
                       color: AppColors.textPrimary,
                       fontSize: 12,
                       fontWeight: FontWeight.w700,
