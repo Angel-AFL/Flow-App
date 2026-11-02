@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 
 import '../../../core/theme/app_colors.dart';
@@ -5,9 +7,18 @@ import '../../../shared/widgets/flow_wordmark.dart';
 import '../models/profile_data.dart';
 
 class ProfileHeader extends StatelessWidget {
-  const ProfileHeader({super.key, required this.onThemeTap});
+  const ProfileHeader({
+    super.key,
+    required this.onThemeTap,
+    this.avatarBytes,
+    this.isPicking = false,
+    this.onAvatarTap,
+  });
 
   final VoidCallback onThemeTap;
+  final Uint8List? avatarBytes;
+  final bool isPicking;
+  final VoidCallback? onAvatarTap;
 
   @override
   Widget build(BuildContext context) {
@@ -41,8 +52,10 @@ class ProfileHeader extends StatelessWidget {
         const SizedBox(height: 10),
         Center(
           child: Semantics(
-            label: 'Avatar de ${ProfileMockData.name}',
-            image: true,
+            button: onAvatarTap != null,
+            label:
+                'Foto de perfil de ${ProfileMockData.name}. '
+                'Toca para cambiarla.',
             child: SizedBox(
               width: 92,
               height: 92,
@@ -53,14 +66,8 @@ class ProfileHeader extends StatelessWidget {
                   Container(
                     width: 84,
                     height: 84,
-                    alignment: Alignment.center,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      gradient: const LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [Color(0xFF67C7F5), AppColors.secondary],
-                      ),
                       boxShadow: [
                         BoxShadow(
                           color: AppColors.secondary.withValues(alpha: 0.28),
@@ -69,22 +76,52 @@ class ProfileHeader extends StatelessWidget {
                         ),
                       ],
                     ),
-                    child: const Text(
-                      ProfileMockData.initials,
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 27,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: 1.2,
+                    child: ClipOval(
+                      child: Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          key: const Key('profile-avatar'),
+                          onTap: onAvatarTap,
+                          customBorder: const CircleBorder(),
+                          child: _AvatarVisual(bytes: avatarBytes),
+                        ),
                       ),
                     ),
                   ),
+                  if (isPicking)
+                    Positioned.fill(
+                      child: IgnorePointer(
+                        child: Center(
+                          child: Container(
+                            width: 84,
+                            height: 84,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: AppColors.background.withValues(
+                                alpha: 0.65,
+                              ),
+                            ),
+                            child: const Center(
+                              child: SizedBox(
+                                width: 22,
+                                height: 22,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2.4,
+                                  color: AppColors.secondary,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
                   Positioned(
-                    right: 3,
-                    bottom: 3,
+                    right: 2,
+                    bottom: 2,
                     child: Container(
-                      width: 21,
-                      height: 21,
+                      width: 24,
+                      height: 24,
+                      alignment: Alignment.center,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         color: AppColors.primary,
@@ -92,6 +129,11 @@ class ProfileHeader extends StatelessWidget {
                           color: AppColors.background,
                           width: 3,
                         ),
+                      ),
+                      child: const Icon(
+                        Icons.photo_camera_rounded,
+                        size: 12,
+                        color: AppColors.onPrimary,
                       ),
                     ),
                   ),
@@ -133,7 +175,33 @@ class ProfileHeader extends StatelessWidget {
           textAlign: TextAlign.center,
           style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w500),
         ),
-        const SizedBox(height: 18),
+        const SizedBox(height: 2),
+        TextButton.icon(
+          onPressed: onAvatarTap,
+          icon: isPicking
+              ? const SizedBox(
+                  width: 13,
+                  height: 13,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: AppColors.secondary,
+                  ),
+                )
+              : const Icon(Icons.photo_camera_outlined, size: 15),
+          label: Text(isPicking ? 'Abriendo galería...' : 'Cambiar foto'),
+          style: TextButton.styleFrom(
+            foregroundColor: AppColors.secondary,
+            disabledForegroundColor: AppColors.textMuted,
+            minimumSize: const Size(0, 32),
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            textStyle: const TextStyle(
+              fontSize: 11.5,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ),
+        const SizedBox(height: 10),
         Row(
           children: [
             const Text(
@@ -198,5 +266,60 @@ class ProfileHeader extends StatelessWidget {
     }
 
     return buffer.toString();
+  }
+}
+
+class _AvatarVisual extends StatelessWidget {
+  const _AvatarVisual({this.bytes});
+
+  final Uint8List? bytes;
+
+  @override
+  Widget build(BuildContext context) {
+    final data = bytes;
+
+    if (data == null) {
+      return const _InitialsAvatar();
+    }
+
+    return Image.memory(
+      data,
+      key: const Key('profile-avatar-image'),
+      width: 84,
+      height: 84,
+      fit: BoxFit.cover,
+      gaplessPlayback: true,
+      errorBuilder: (_, _, _) => const _InitialsAvatar(),
+    );
+  }
+}
+
+class _InitialsAvatar extends StatelessWidget {
+  const _InitialsAvatar();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 84,
+      height: 84,
+      alignment: Alignment.center,
+      decoration: const BoxDecoration(
+        shape: BoxShape.circle,
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFF67C7F5), AppColors.secondary],
+        ),
+      ),
+      child: const Text(
+        ProfileMockData.initials,
+        style: TextStyle(
+          color: Colors.white,
+          fontSize: 27,
+          fontWeight: FontWeight.w800,
+          letterSpacing: 1.2,
+        ),
+      ),
+    );
   }
 }
