@@ -5,21 +5,26 @@ import 'package:flow_app/app.dart';
 
 import 'helpers/fake_auth_repository.dart';
 import 'helpers/fake_profile_repository.dart';
+import 'helpers/fake_store_repository.dart';
 
 void main() {
-  Future<void> pumpLesson(
+  Future<FakeStoreRepository> pumpLesson(
     WidgetTester tester, {
     Size size = const Size(390, 844),
+    FakeStoreRepository? storeRepository,
   }) async {
     tester.view.physicalSize = size;
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
 
+    final store = storeRepository ?? FakeStoreRepository();
+
     await tester.pumpWidget(
       FlowApp(
         authRepository: FakeAuthRepository(user: demoUser),
         profileRepository: FakeProfileRepository(),
+        storeRepository: store,
       ),
     );
     await tester.tap(find.text('Aprender'));
@@ -27,6 +32,8 @@ void main() {
     await tester.ensureVisible(find.text('Tu primer diagrama'));
     await tester.tap(find.text('Tu primer diagrama'));
     await tester.pumpAndSettle();
+
+    return store;
   }
 
   Future<void> placeInOrder(WidgetTester tester) async {
@@ -50,7 +57,7 @@ void main() {
   testWidgets('aprueba el diagrama en orden y actualiza el progreso', (
     tester,
   ) async {
-    await pumpLesson(tester);
+    final store = await pumpLesson(tester);
 
     await placeInOrder(tester);
     await tester.ensureVisible(find.text('Aprobar diagrama'));
@@ -59,6 +66,7 @@ void main() {
 
     expect(find.text('¡Diagrama aprobado!'), findsOneWidget);
     expect(find.text('+50 XP'), findsOneWidget);
+    expect(find.text('+25 monedas'), findsOneWidget);
 
     await tester.ensureVisible(find.text('Volver a la ruta'));
     await tester.tap(find.text('Volver a la ruta'));
@@ -67,6 +75,12 @@ void main() {
     expect(find.text('Ruta de aprendizaje'), findsOneWidget);
     expect(find.text('3 de 3 lecciones'), findsOneWidget);
     expect(find.text('100%'), findsOneWidget);
+    expect(store.lastLessonId, 'unit-1-lesson-3');
+    expect(store.snapshot.coins, 265);
+    expect(
+      find.textContaining('Recompensa: +25 monedas y +50 XP'),
+      findsOneWidget,
+    );
     expect(tester.takeException(), isNull);
   });
 

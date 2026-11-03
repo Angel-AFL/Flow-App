@@ -6,6 +6,7 @@ import 'package:flow_app/features/profile/my_diagrams_screen.dart';
 
 import 'helpers/fake_auth_repository.dart';
 import 'helpers/fake_profile_repository.dart';
+import 'helpers/fake_store_repository.dart';
 
 void main() {
   Future<FakeAuthRepository> pumpProfile(
@@ -23,6 +24,7 @@ void main() {
       FlowApp(
         authRepository: authRepository,
         profileRepository: FakeProfileRepository(),
+        storeRepository: FakeStoreRepository(),
       ),
     );
     await tester.tap(find.text('Perfil'));

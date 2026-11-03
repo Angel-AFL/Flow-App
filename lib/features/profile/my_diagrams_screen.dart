@@ -1,14 +1,20 @@
 import 'package:flutter/material.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../../shared/models/diagram_skin.dart';
 import '../../shared/widgets/flow_background.dart';
 import 'models/profile_models.dart';
 import 'widgets/profile_diagram_card.dart';
 
 class MyDiagramsScreen extends StatelessWidget {
-  const MyDiagramsScreen({super.key, required this.diagrams});
+  const MyDiagramsScreen({
+    super.key,
+    required this.diagrams,
+    this.skin = DiagramSkin.classic,
+  });
 
   final List<ProfileDiagram> diagrams;
+  final DiagramSkin skin;
 
   @override
   Widget build(BuildContext context) {
@@ -74,6 +80,7 @@ class MyDiagramsScreen extends StatelessWidget {
                               return ProfileDiagramCard(
                                 diagram: diagrams[index],
                                 previewHeight: 142,
+                                skin: skin,
                               );
                             },
                           ),

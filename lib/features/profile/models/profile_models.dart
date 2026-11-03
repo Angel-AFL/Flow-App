@@ -2,7 +2,9 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 
+import '../../../shared/models/diagram_skin.dart';
 import '../../../shared/models/diagram_spec.dart';
+import '../../../shared/models/profile_title.dart';
 
 class UserProfile {
   const UserProfile({
@@ -16,6 +18,9 @@ class UserProfile {
     required this.streakDays,
     required this.lessonsCompleted,
     this.avatarUrl,
+    this.coins = 240,
+    this.equippedSkin = DiagramSkin.classic,
+    this.equippedTitle = ProfileTitle.novice,
   });
 
   final String id;
@@ -28,6 +33,9 @@ class UserProfile {
   final int nextLevelXp;
   final int streakDays;
   final int lessonsCompleted;
+  final int coins;
+  final DiagramSkin equippedSkin;
+  final ProfileTitle equippedTitle;
 
   double get levelProgress {
     if (nextLevelXp <= 0) {
@@ -68,6 +76,9 @@ class UserProfile {
     int? nextLevelXp,
     int? streakDays,
     int? lessonsCompleted,
+    int? coins,
+    DiagramSkin? equippedSkin,
+    ProfileTitle? equippedTitle,
   }) {
     return UserProfile(
       id: id,
@@ -80,6 +91,9 @@ class UserProfile {
       nextLevelXp: nextLevelXp ?? this.nextLevelXp,
       streakDays: streakDays ?? this.streakDays,
       lessonsCompleted: lessonsCompleted ?? this.lessonsCompleted,
+      coins: coins ?? this.coins,
+      equippedSkin: equippedSkin ?? this.equippedSkin,
+      equippedTitle: equippedTitle ?? this.equippedTitle,
     );
   }
 }

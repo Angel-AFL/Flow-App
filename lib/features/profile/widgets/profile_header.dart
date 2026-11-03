@@ -202,6 +202,38 @@ class ProfileHeader extends StatelessWidget {
           textAlign: TextAlign.center,
           style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w500),
         ),
+        const SizedBox(height: 8),
+        Center(
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+            decoration: BoxDecoration(
+              color: profile.equippedTitle.color.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(999),
+              border: Border.all(
+                color: profile.equippedTitle.color.withValues(alpha: 0.45),
+              ),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  profile.equippedTitle.icon,
+                  color: profile.equippedTitle.color,
+                  size: 13,
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  profile.equippedTitle.label,
+                  style: TextStyle(
+                    color: profile.equippedTitle.color,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
         if (email != null && email!.isNotEmpty) ...[
           const SizedBox(height: 4),
           Text(

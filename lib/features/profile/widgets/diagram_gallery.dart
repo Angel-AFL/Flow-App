@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../shared/models/diagram_skin.dart';
 import '../../../shared/widgets/section_header.dart';
 import '../models/profile_models.dart';
 import 'profile_diagram_card.dart';
@@ -10,10 +11,12 @@ class DiagramGallery extends StatelessWidget {
     super.key,
     required this.diagrams,
     required this.onViewAll,
+    this.skin = DiagramSkin.classic,
   });
 
   final List<ProfileDiagram> diagrams;
   final VoidCallback onViewAll;
+  final DiagramSkin skin;
 
   @override
   Widget build(BuildContext context) {
@@ -41,7 +44,10 @@ class DiagramGallery extends StatelessWidget {
                       left: index == 0 ? 0 : 5,
                       right: index == 0 ? 5 : 0,
                     ),
-                    child: ProfileDiagramCard(diagram: preview[index]),
+                    child: ProfileDiagramCard(
+                      diagram: preview[index],
+                      skin: skin,
+                    ),
                   ),
                 ),
             ],

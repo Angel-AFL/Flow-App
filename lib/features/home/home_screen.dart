@@ -3,13 +3,16 @@ import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 import '../../shared/widgets/section_header.dart';
 import '../../shared/widgets/stat_card.dart';
+import '../store/controllers/wallet_controller.dart';
 import 'widgets/current_route_card.dart';
 import 'widgets/daily_goal_card.dart';
 import 'widgets/home_header.dart';
 import 'widgets/mission_card.dart';
 
 class HomeScreen extends StatelessWidget {
-  const HomeScreen({super.key});
+  const HomeScreen({super.key, required this.wallet});
+
+  final WalletController wallet;
 
   @override
   Widget build(BuildContext context) {
@@ -23,7 +26,10 @@ class HomeScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const HomeHeader(),
+                ListenableBuilder(
+                  listenable: wallet,
+                  builder: (context, _) => HomeHeader(coins: wallet.coins),
+                ),
                 const SizedBox(height: 22),
                 const CurrentRouteCard(),
                 const SizedBox(height: 26),

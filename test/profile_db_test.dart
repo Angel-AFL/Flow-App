@@ -11,6 +11,7 @@ import 'package:flow_app/features/profile/widgets/profile_diagram_card.dart';
 
 import 'helpers/fake_auth_repository.dart';
 import 'helpers/fake_profile_repository.dart';
+import 'helpers/fake_store_repository.dart';
 
 void main() {
   Future<FakeProfileRepository> openProfile(
@@ -30,6 +31,7 @@ void main() {
       FlowApp(
         authRepository: FakeAuthRepository(user: demoUser),
         profileRepository: repository,
+        storeRepository: FakeStoreRepository(),
       ),
     );
     await tester.tap(find.text('Perfil'));
@@ -146,6 +148,13 @@ void main() {
     expect(find.text('Ese nombre de usuario ya está en uso.'), findsOneWidget);
     expect(find.text('Editar perfil'), findsOneWidget);
     expect(repository.lastEdit, isNull);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('muestra el título equipado en el perfil', (tester) async {
+    await openProfile(tester);
+
+    expect(find.text('Novato'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 

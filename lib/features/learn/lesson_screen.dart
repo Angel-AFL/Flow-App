@@ -426,21 +426,55 @@ class _SuccessPanel extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 10),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: AppColors.gold.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(999),
-              border: Border.all(color: AppColors.gold.withValues(alpha: 0.45)),
-            ),
-            child: Text(
-              '+${lesson.xpReward} XP',
-              style: const TextStyle(
-                color: AppColors.gold,
-                fontSize: 12,
-                fontWeight: FontWeight.w800,
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            alignment: WrapAlignment.center,
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  color: AppColors.gold.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(999),
+                  border: Border.all(
+                    color: AppColors.gold.withValues(alpha: 0.45),
+                  ),
+                ),
+                child: Text(
+                  '+${lesson.xpReward} XP',
+                  style: const TextStyle(
+                    color: AppColors.gold,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
               ),
-            ),
+              if (lesson.coinReward > 0)
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppColors.secondary.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(999),
+                    border: Border.all(
+                      color: AppColors.secondary.withValues(alpha: 0.45),
+                    ),
+                  ),
+                  child: Text(
+                    '+${lesson.coinReward} monedas',
+                    style: const TextStyle(
+                      color: AppColors.secondary,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ),
+            ],
           ),
           const SizedBox(height: 16),
           SizedBox(

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../shared/models/diagram_skin.dart';
 import '../../../shared/models/diagram_spec.dart';
+import '../../../shared/models/profile_title.dart';
 import '../models/profile_models.dart';
 import '../utils/activity_weeks.dart';
 import 'profile_repository.dart';
@@ -56,8 +58,14 @@ class SupabaseProfileRepository implements ProfileRepository {
               .toInt(),
       };
 
+      final equipped = await _loadEquipped(profileRow);
+
       return ProfileSnapshot(
-        profile: _mapProfile(profileRow),
+        profile: _mapProfile(
+          profileRow,
+          equippedSkin: equipped.$1,
+          equippedTitle: equipped.$2,
+        ),
         achievements: achievementRows
             .map(
               (row) => _mapAchievement(
@@ -105,7 +113,13 @@ class SupabaseProfileRepository implements ProfileRepository {
           .select()
           .single();
 
-      return _mapProfile(row);
+      final equipped = await _loadEquipped(row);
+
+      return _mapProfile(
+        row,
+        equippedSkin: equipped.$1,
+        equippedTitle: equipped.$2,
+      );
     } on PostgrestException catch (error) {
       throw _failureFor(
         error,
@@ -183,7 +197,81 @@ class SupabaseProfileRepository implements ProfileRepository {
     }
   }
 
-  UserProfile _mapProfile(Map<String, dynamic> row) {
+  Future<(DiagramSkin, ProfileTitle)> _loadEquipped(
+    Map<String, dynamic> row,
+  ) async {
+    final skinCode = (row['equipped_skin_code'] as String?)?.trim();
+    final titleCode = (row['equipped_title_code'] as String?)?.trim();
+    final codes = <String>{
+      if (skinCode != null && skinCode.isNotEmpty) skinCode,
+      if (titleCode != null && titleCode.isNotEmpty) titleCode,
+    }.toList();
+
+    if (codes.isEmpty) {
+      return (DiagramSkin.classic, ProfileTitle.novice);
+    }
+
+    try {
+      final rows =
+          (await _client
+                  .from('store_items')
+                  .select('code, name, payload')
+                  .inFilter('code', codes))
+              .cast<Map<String, dynamic>>();
+
+      return (_skinFromRows(skinCode, rows), _titleFromRows(titleCode, rows));
+    } catch (_) {
+      return (DiagramSkin.classic, ProfileTitle.novice);
+    }
+  }
+
+  static DiagramSkin _skinFromRows(
+    String? code,
+    List<Map<String, dynamic>> rows,
+  ) {
+    if (code == null || code.isEmpty) {
+      return DiagramSkin.classic;
+    }
+
+    for (final row in rows) {
+      if (row['code'] == code) {
+        return DiagramSkin.fromPayload(
+          code: code,
+          name: row['name'] as String? ?? 'Clásico',
+          payload: (row['payload'] as Map?)?.cast<String, dynamic>() ?? {},
+        );
+      }
+    }
+
+    return DiagramSkin.classic;
+  }
+
+  static ProfileTitle _titleFromRows(
+    String? code,
+    List<Map<String, dynamic>> rows,
+  ) {
+    if (code == null || code.isEmpty) {
+      return ProfileTitle.novice;
+    }
+
+    for (final row in rows) {
+      if (row['code'] == code) {
+        return ProfileTitle.fromPayload(
+          code: code,
+          name: row['name'] as String? ?? 'Novato',
+          payload: (row['payload'] as Map?)?.cast<String, dynamic>() ?? {},
+        );
+      }
+    }
+
+    return ProfileTitle.novice;
+  }
+
+  UserProfile _mapProfile(
+    Map<String, dynamic> row, {
+    required DiagramSkin equippedSkin,
+    required ProfileTitle equippedTitle,
+  }) {
     final avatarPath = (row['avatar_path'] as String?)?.trim();
     final displayName =
         (row['display_name'] as String?)?.trim().isNotEmpty == true
@@ -208,6 +296,9 @@ class SupabaseProfileRepository implements ProfileRepository {
       nextLevelXp: (row['next_level_xp'] as num?)?.toInt() ?? 500,
       streakDays: (row['streak_days'] as num?)?.toInt() ?? 0,
       lessonsCompleted: (row['lessons_completed'] as num?)?.toInt() ?? 0,
+      coins: (row['coins'] as num?)?.toInt() ?? 240,
+      equippedSkin: equippedSkin,
+      equippedTitle: equippedTitle,
     );
   }
 

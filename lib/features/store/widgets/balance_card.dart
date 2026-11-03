@@ -1,64 +1,143 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../shared/utils/formatters.dart';
 
 class BalanceCard extends StatelessWidget {
-  const BalanceCard({super.key});
+  const BalanceCard({
+    super.key,
+    required this.coins,
+    required this.canClaimDailyReward,
+    required this.isClaiming,
+    required this.onClaimDaily,
+  });
+
+  final int coins;
+  final bool canClaimDailyReward;
+  final bool isClaiming;
+  final VoidCallback onClaimDaily;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.fromLTRB(18, 16, 16, 16),
+      padding: const EdgeInsets.fromLTRB(18, 16, 16, 14),
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: AppColors.border.withValues(alpha: 0.7)),
       ),
-      child: Row(
+      child: Column(
         children: [
-          Expanded(
-            child: Semantics(
-              label: 'Saldo disponible: 240 monedas',
-              child: const ExcludeSemantics(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'TU SALDO',
-                      style: TextStyle(
-                        color: AppColors.secondary,
-                        fontSize: 9.5,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 1.2,
-                      ),
-                    ),
-                    SizedBox(height: 8),
-                    Row(
+          Row(
+            children: [
+              Expanded(
+                child: Semantics(
+                  label:
+                      'Saldo disponible: ${formatThousands(coins)} monedas Flow',
+                  child: ExcludeSemantics(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Icon(
-                          Icons.monetization_on_rounded,
-                          color: AppColors.gold,
-                          size: 22,
-                        ),
-                        SizedBox(width: 6),
-                        Text(
-                          '240',
+                        const Text(
+                          'TU SALDO',
                           style: TextStyle(
-                            color: AppColors.textPrimary,
-                            fontSize: 26,
-                            fontWeight: FontWeight.w800,
-                            height: 1.1,
+                            color: AppColors.secondary,
+                            fontSize: 9.5,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 1.2,
                           ),
+                        ),
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            const Icon(
+                              Icons.monetization_on_rounded,
+                              color: AppColors.gold,
+                              size: 22,
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              formatThousands(coins),
+                              style: const TextStyle(
+                                color: AppColors.textPrimary,
+                                fontSize: 26,
+                                fontWeight: FontWeight.w800,
+                                height: 1.1,
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
-                  ],
+                  ),
                 ),
               ),
+              const SizedBox(width: 12),
+              const _CoinStack(),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.fromLTRB(10, 6, 4, 6),
+            decoration: BoxDecoration(
+              color: AppColors.backgroundDeep.withValues(alpha: 0.55),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: AppColors.border.withValues(alpha: 0.6),
+              ),
+            ),
+            child: Row(
+              children: [
+                const Icon(
+                  Icons.card_giftcard_rounded,
+                  color: AppColors.gold,
+                  size: 18,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    canClaimDailyReward
+                        ? 'Cofre diario listo: +25 monedas'
+                        : 'Cofre diario disponible cada 24 h',
+                    maxLines: 2,
+                    style: const TextStyle(
+                      color: AppColors.textSecondary,
+                      fontSize: 10.5,
+                      fontWeight: FontWeight.w600,
+                      height: 1.3,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 4),
+                TextButton(
+                  onPressed: canClaimDailyReward && !isClaiming
+                      ? onClaimDaily
+                      : null,
+                  style: TextButton.styleFrom(
+                    foregroundColor: AppColors.gold,
+                    disabledForegroundColor: AppColors.textMuted,
+                    padding: const EdgeInsets.symmetric(horizontal: 10),
+                    minimumSize: const Size(0, 32),
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    textStyle: const TextStyle(
+                      fontSize: 10.5,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  child: isClaiming
+                      ? const SizedBox(
+                          width: 13,
+                          height: 13,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: AppColors.gold,
+                          ),
+                        )
+                      : Text(canClaimDailyReward ? 'Reclamar' : 'En espera'),
+                ),
+              ],
             ),
           ),
-          const SizedBox(width: 12),
-          const _CoinStack(),
         ],
       ),
     );

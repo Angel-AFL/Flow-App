@@ -19,6 +19,7 @@ class DiagramLesson {
     required this.title,
     required this.instructions,
     required this.xpReward,
+    this.coinReward = 0,
     required this.blocks,
   });
 
@@ -27,6 +28,7 @@ class DiagramLesson {
   final String title;
   final String instructions;
   final int xpReward;
+  final int coinReward;
   final List<DiagramBlock> blocks;
 
   bool isCorrect(List<DiagramBlock?> placedBlocks) {
@@ -54,6 +56,7 @@ const firstDiagramLesson = DiagramLesson(
       'Toca los bloques para colocarlos en el diagrama. Todo flujo empieza '
       'en Inicio y termina en Fin.',
   xpReward: 50,
+  coinReward: 25,
   blocks: [
     DiagramBlock(id: 'start', kind: DiagramBlockKind.start, label: 'Inicio'),
     DiagramBlock(
