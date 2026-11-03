@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 
+import 'core/auth/auth_gate.dart';
+import 'core/auth/auth_repository.dart';
 import 'core/theme/app_theme.dart';
-import 'features/welcome/welcome_screen.dart';
 
 class FlowApp extends StatelessWidget {
-  const FlowApp({super.key});
+  const FlowApp({super.key, required this.authRepository});
+
+  final AuthRepository authRepository;
 
   @override
   Widget build(BuildContext context) {
@@ -12,7 +15,7 @@ class FlowApp extends StatelessWidget {
       title: 'FlowApp',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.dark,
-      home: const WelcomeScreen(),
+      home: AuthGate(authRepository: authRepository),
     );
   }
 }

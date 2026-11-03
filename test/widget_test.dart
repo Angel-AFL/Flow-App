@@ -3,6 +3,8 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:flow_app/app.dart';
 
+import 'helpers/fake_auth_repository.dart';
+
 void main() {
   Future<void> pumpWelcome(
     WidgetTester tester, {
@@ -13,7 +15,9 @@ void main() {
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
 
-    await tester.pumpWidget(const FlowApp());
+    await tester.pumpWidget(
+      FlowApp(authRepository: FakeAuthRepository(user: demoUser)),
+    );
   }
 
   Future<void> pumpApp(
@@ -21,9 +25,6 @@ void main() {
     Size size = const Size(390, 844),
   }) async {
     await pumpWelcome(tester, size: size);
-    await tester.ensureVisible(find.text('Comenzar'));
-    await tester.tap(find.text('Comenzar'));
-    await tester.pumpAndSettle();
   }
 
   testWidgets('renderiza el contenido estático de Inicio', (tester) async {

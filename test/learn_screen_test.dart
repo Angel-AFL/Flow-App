@@ -3,6 +3,8 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:flow_app/app.dart';
 
+import 'helpers/fake_auth_repository.dart';
+
 void main() {
   Future<void> pumpLearn(
     WidgetTester tester, {
@@ -13,10 +15,9 @@ void main() {
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
 
-    await tester.pumpWidget(const FlowApp());
-    await tester.ensureVisible(find.text('Comenzar'));
-    await tester.tap(find.text('Comenzar'));
-    await tester.pumpAndSettle();
+    await tester.pumpWidget(
+      FlowApp(authRepository: FakeAuthRepository(user: demoUser)),
+    );
     await tester.tap(find.text('Aprender'));
     await tester.pumpAndSettle();
   }

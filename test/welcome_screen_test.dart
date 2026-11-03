@@ -3,6 +3,8 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:flow_app/app.dart';
 
+import 'helpers/fake_auth_repository.dart';
+
 void main() {
   Future<void> pumpWelcome(
     WidgetTester tester, {
@@ -13,7 +15,9 @@ void main() {
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
 
-    await tester.pumpWidget(const FlowApp());
+    final authRepository = FakeAuthRepository();
+    addTearDown(authRepository.dispose);
+    await tester.pumpWidget(FlowApp(authRepository: authRepository));
   }
 
   testWidgets('muestra la pantalla de bienvenida', (tester) async {
@@ -35,27 +39,27 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('Comenzar navega al shell principal', (tester) async {
+  testWidgets('Comenzar abre el registro', (tester) async {
     await pumpWelcome(tester);
 
     await tester.tap(find.text('Comenzar'));
     await tester.pumpAndSettle();
 
-    expect(find.text('¡Hola, estudiante!'), findsOneWidget);
-    expect(
-      find.text('Aprende a pensar\npaso a paso.', findRichText: true),
-      findsNothing,
-    );
+    expect(find.text('Crea tu\ncuenta.'), findsOneWidget);
+    expect(find.text('Crear cuenta'), findsOneWidget);
+    expect(find.text('Entrar'), findsNothing);
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('Ya tengo una cuenta navega al shell principal', (tester) async {
+  testWidgets('Ya tengo una cuenta abre el login', (tester) async {
     await pumpWelcome(tester);
 
     await tester.tap(find.text('Ya tengo una cuenta'));
     await tester.pumpAndSettle();
 
-    expect(find.text('¡Hola, estudiante!'), findsOneWidget);
+    expect(find.text('Bienvenido\nde nuevo.'), findsOneWidget);
+    expect(find.text('Entrar'), findsOneWidget);
+    expect(find.text('Crear cuenta'), findsNothing);
     expect(tester.takeException(), isNull);
   });
 

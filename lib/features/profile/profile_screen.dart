@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../shared/widgets/stat_card.dart';
-import '../welcome/welcome_screen.dart';
 import 'services/profile_image_picker.dart';
 import 'widgets/achievements_card.dart';
 import 'widgets/activity_heatmap.dart';
@@ -12,9 +11,16 @@ import 'widgets/diagram_gallery.dart';
 import 'widgets/profile_header.dart';
 
 class ProfileScreen extends StatefulWidget {
-  const ProfileScreen({super.key, this.pickImage});
+  const ProfileScreen({
+    super.key,
+    this.pickImage,
+    this.userEmail,
+    required this.onSignOut,
+  });
 
   final PickProfileImage? pickImage;
+  final String? userEmail;
+  final Future<void> Function() onSignOut;
 
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
@@ -79,11 +85,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
-  void _logout(BuildContext context) {
-    Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute<void>(builder: (_) => const WelcomeScreen()),
-      (route) => false,
-    );
+  Future<void> _logout(BuildContext context) async {
+    try {
+      await widget.onSignOut();
+    } catch (_) {
+      if (!mounted || !context.mounted) {
+        return;
+      }
+      _showFeedback(
+        context,
+        'No se pudo cerrar la sesión. Inténtalo de nuevo.',
+      );
+    }
   }
 
   @override
@@ -101,6 +114,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ProfileHeader(
                   avatarBytes: _avatarBytes,
                   isPicking: _isPicking,
+                  email: widget.userEmail,
                   onAvatarTap: _isPicking ? null : _pickAvatar,
                   onThemeTap: () => _showFeedback(
                     context,
