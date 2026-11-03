@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:flow_app/app.dart';
 
 import 'helpers/fake_auth_repository.dart';
+import 'helpers/fake_profile_repository.dart';
 
 void main() {
   Future<void> pumpWelcome(
@@ -17,7 +18,12 @@ void main() {
 
     final authRepository = FakeAuthRepository();
     addTearDown(authRepository.dispose);
-    await tester.pumpWidget(FlowApp(authRepository: authRepository));
+    await tester.pumpWidget(
+      FlowApp(
+        authRepository: authRepository,
+        profileRepository: FakeProfileRepository(),
+      ),
+    );
   }
 
   testWidgets('muestra la pantalla de bienvenida', (tester) async {

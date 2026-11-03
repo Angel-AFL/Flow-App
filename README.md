@@ -2,7 +2,7 @@
 
 > Aprende a pensar paso a paso.
 
-**Estado:** En desarrollo · **Stack:** Flutter + Dart + Supabase · **Última etapa:** Autenticación real con Supabase (email y contraseña)
+**Estado:** En desarrollo · **Stack:** Flutter + Dart + Supabase · **Última etapa:** Perfil conectado a Supabase (datos, edición, avatar y galería)
 
 ## Descripción
 
@@ -46,13 +46,13 @@ La carpeta [`/docs`](docs/) contiene todos los bocetos de alta fidelidad de la a
 | Aprender (detalle) | <img src="docs/aprender-2.png" width="180" alt="Detalle de la ruta de aprendizaje"> | Vista extendida de la ruta con lecciones completadas, lección actual y unidades bloqueadas. | **Mock estático** |
 | Comunidad | <img src="docs/comunidad-1.png" width="180" alt="Feed de la comunidad"> | Feed con pestañas "Para ti", "Siguiendo" y "Workshop", reto semanal y publicaciones con diagramas. | **Mock estático** |
 | Comunidad (detalle) | <img src="docs/comunidad-2.png" width="180" alt="Detalle del feed de la comunidad"> | Vista completa del feed con likes, comentarios y acción de Remix sobre los diagramas publicados. | **Mock estático** |
-| Perfil | <img src="docs/perfil-1.png" width="180" alt="Perfil del usuario"> | Perfil con nivel, estadísticas, logros desbloqueados, heatmap de actividad y diagramas propios. | **Mock estático** |
-| Perfil (detalle) | <img src="docs/perfil-2.png" width="180" alt="Detalle del perfil del usuario"> | Vista extendida del perfil con la sección de logros, actividad y "Mis diagramas". | **Mock estático** |
+| Perfil | <img src="docs/perfil-1.png" width="180" alt="Perfil del usuario"> | Perfil con nivel, estadísticas, logros desbloqueados, heatmap de actividad y diagramas propios. | **Implementado (Supabase)** |
+| Perfil (detalle) | <img src="docs/perfil-2.png" width="180" alt="Detalle del perfil del usuario"> | Vista extendida del perfil con la sección de logros, actividad y "Mis diagramas". | **Implementado (Supabase)** |
 | Tienda | <img src="docs/tienda.png" width="180" alt="Tienda de skins"> | Tienda con saldo de monedas y skins disponibles: Clásico, Pixel Art y Cyber. | **Mock estático** |
 
 ## Módulos implementados
 
-El repositorio ya cuenta con la estructura base de la aplicación, el tema visual, la autenticación real con Supabase y las pantallas del producto construidas como mocks estáticos.
+El repositorio ya cuenta con la estructura base de la aplicación, el tema visual, la autenticación real con Supabase, el perfil persistido en base de datos y las demás pantallas del producto construidas como mocks estáticos.
 
 | Módulo | Estado | Notas |
 | --- | --- | --- |
@@ -65,10 +65,11 @@ El repositorio ya cuenta con la estructura base de la aplicación, el tema visua
 | Pantalla Aprender | Implementado (mock) | Resumen de unidad, progreso y ruta con lecciones completadas, actuales y unidades bloqueadas. La lección 3 es interactiva: permite armar un diagrama lineal de tres bloques y actualiza el progreso en memoria. |
 | Pantalla Comunidad | Implementado (mock) | Feed con pestañas, reto semanal, publicaciones con diagramas, likes locales y feedback para comentarios, Remix y menú de publicación. |
 | Pantalla Tienda | Implementado (mock) | Saldo de monedas y skins Clásico, Pixel Art y Cyber con precios estáticos. |
-| Pantalla Perfil | Implementado (mock) | Nivel y XP, estadísticas, logros, heatmap de actividad, “Mis diagramas” y cierre de sesión real con Supabase. Permite cambiar la foto de perfil desde la galería (solo en memoria). |
-| Módulos funcionales de FlowApp | Parcial | La autenticación ya es real; el progreso, la comunidad y la tienda siguen usando datos mock y no hay persistencia de XP ni backend propio. |
+| Pantalla Perfil | Implementado (Supabase) | Perfil cargado desde Postgres: nombre, usuario, rol, XP, nivel, racha, lecciones, logros, heatmap de actividad y diagramas. Permite editar nombre/usuario y subir una foto a Supabase Storage. |
+| Base de datos del perfil | Implementado | Tablas `profiles`, `achievements`, `user_achievements`, `diagrams` y `daily_activity`, con RLS, triggers y bucket `avatars`. Incluye migración y seed de demostración en [`/supabase`](supabase/). |
+| Módulos funcionales de FlowApp | Parcial | Autenticación y perfil ya usan Supabase; el progreso de las lecciones, la comunidad y la tienda siguen con datos mock. |
 
-> **Nota:** las pantallas de la carpeta [`/docs`](docs/) son diseños y bocetos de referencia. Todas las pantallas documentadas replican sus bocetos con datos estáticos; la autenticación ya está conectada a Supabase, mientras que la lógica de negocio y la persistencia del progreso siguen pendientes.
+> **Nota:** las pantallas de la carpeta [`/docs`](docs/) son diseños y bocetos de referencia. El perfil y la autenticación ya están conectados a Supabase; el resto de pantallas replican sus bocetos con datos estáticos y la lógica de negocio del progreso sigue pendiente.
 
 ### Detalle de la implementación actual
 
@@ -80,10 +81,11 @@ El repositorio ya cuenta con la estructura base de la aplicación, el tema visua
 - **Aprender:** resumen de unidad y ruta de lecciones en [`lib/features/learn/`](lib/features/learn/), con conectores y estados de lección completada, actual y bloqueada. La lección 3 abre una pantalla interactiva que valida el orden **Inicio → Mostrar mensaje → Fin**; al aprobarla suma +50 XP y marca la unidad al 100% en memoria. Los datos de la lección viven en [`models/diagram_lesson.dart`](lib/features/learn/models/diagram_lesson.dart), listos para sustituirse por una fuente con base de datos.
 - **Comunidad:** feed en [`lib/features/community/community_screen.dart`](lib/features/community/community_screen.dart), con datos mock por pestaña, banner de workshop, publicaciones y previsualizaciones de diagramas en [`lib/features/community/widgets/`](lib/features/community/widgets/). Los likes se actualizan localmente y las acciones pendientes muestran un `SnackBar`.
 - **Tienda:** saldo y catálogo de skins en [`lib/features/store/`](lib/features/store/), con precios estáticos y la skin Clásico equipada.
-- **Perfil:** datos mock en [`lib/features/profile/`](lib/features/profile/), con avatar, nivel y XP, estadísticas, logros, heatmap de actividad, diagramas propios y cierre de sesión. Muestra el correo de la sesión de Supabase y “Cerrar sesión” invalida la sesión real. La foto de perfil se puede cambiar desde la galería tocando el avatar o “Cambiar foto”; se mantiene en memoria durante la sesión y la selección está aislada en [`services/profile_image_picker.dart`](lib/features/profile/services/profile_image_picker.dart) para conectarla después a una BD.
+- **Perfil:** datos reales desde Supabase en [`lib/features/profile/`](lib/features/profile/): nombre, usuario, rol, avatar, XP, nivel, racha, lecciones, logros, heatmap de actividad (7 días × 5 semanas) y diagramas propios. Permite editar nombre y usuario desde un bottom sheet, subir la foto a Storage y abrir la galería completa en [`my_diagrams_screen.dart`](lib/features/profile/my_diagrams_screen.dart). Incluye estados de carga, error con reintento, pull-to-refresh y estados vacíos.
+- **Persistencia del perfil:** capa de datos en [`lib/features/profile/repositories/`](lib/features/profile/repositories/) con `ProfileRepository`, `SupabaseProfileRepository`, modelos en [`models/profile_models.dart`](lib/features/profile/models/profile_models.dart) y utilidades del heatmap en [`utils/activity_weeks.dart`](lib/features/profile/utils/activity_weeks.dart). El esquema SQL, las políticas RLS y el bucket de avatares están en [`supabase/migrations/`](supabase/migrations/); el seed opcional con los datos del boceto está en [`supabase/seed_demo.sql`](supabase/seed_demo.sql).
 - **Navegación:** `AuthGate` es la raíz de la app; sin sesión muestra Bienvenida y con sesión muestra el shell con `IndexedStack`. La barra inferior de cinco pestañas está en [`lib/core/navigation/app_shell.dart`](lib/core/navigation/app_shell.dart) y [`lib/shared/widgets/flow_bottom_nav.dart`](lib/shared/widgets/flow_bottom_nav.dart).
-- **Datos:** los valores de progreso, comunidad y tienda (`7`, `240`, `38%`, `1,250 XP`, `2/3`, `48 likes`, `3 de 12`, etc.) siguen siendo constantes locales. La identidad y la sesión ya se gestionan con Supabase.
-- **Dependencias:** se usa Flutter, `supabase_flutter` para autenticación, `flutter_dotenv` para leer las claves desde `.env`, `flutter_test` e `image_picker` para seleccionar la foto de perfil desde la galería. En iOS se añadió `NSPhotoLibraryUsageDescription`; en macOS, el permiso de lectura de archivos seleccionados por el usuario y acceso de red saliente.
+- **Datos:** el perfil y la sesión se gestionan con Supabase. Los valores de Inicio, Aprender, Comunidad y Tienda (`7`, `240`, `38%`, `1,250 XP`, `2/3`, `48 likes`, etc.) siguen siendo constantes locales.
+- **Dependencias:** se usa Flutter, `supabase_flutter` para autenticación, Postgres y Storage, `flutter_dotenv` para leer las claves desde `.env`, `flutter_test` e `image_picker` para seleccionar la foto de perfil desde la galería. En iOS se añadió `NSPhotoLibraryUsageDescription`; en macOS, el permiso de lectura de archivos seleccionados por el usuario y acceso de red saliente.
 
 ## Pendientes por hacer
 
@@ -108,7 +110,7 @@ El repositorio ya cuenta con la estructura base de la aplicación, el tema visua
 - [x] Implementar la pantalla de Aprender (mock estático).
 - [x] Implementar la pantalla de Comunidad (mock estático).
 - [x] Implementar la pantalla de Tienda (mock estático).
-- [x] Implementar la pantalla de Perfil (mock estático).
+- [x] Implementar la pantalla de Perfil conectada a Supabase.
 
 ### Ruta de aprendizaje
 
@@ -135,7 +137,7 @@ El repositorio ya cuenta con la estructura base de la aplicación, el tema visua
 - [ ] Implementar el Workshop y el creador de niveles.
 - [ ] Implementar el sistema de reseñas de niveles.
 - [ ] Implementar los perfiles públicos.
-- [x] Implementar el heatmap de actividad en el Perfil (mock estático).
+- [x] Implementar el heatmap de actividad en el Perfil (datos de Supabase).
 
 ### Tienda e inventario
 
@@ -147,17 +149,18 @@ El repositorio ya cuenta con la estructura base de la aplicación, el tema visua
 ### Infraestructura
 
 - [x] Integrar Supabase para autenticación (email y contraseña).
-- [ ] Definir e implementar el backend y la API.
-- [ ] Implementar la persistencia de datos.
+- [x] Persistir perfil, logros, actividad y diagramas en Supabase (con RLS y Storage).
+- [ ] Definir e implementar el backend y la API del resto de módulos.
+- [ ] Implementar la persistencia del progreso de aprendizaje y la comunidad.
 - [x] Implementar pruebas de widgets para Bienvenida, Inicio, Aprender, Comunidad, Tienda y Perfil.
-- [ ] Implementar pruebas unitarias de la lógica de negocio.
+- [x] Implementar pruebas unitarias de la lógica del heatmap.
 - [ ] Configurar integración continua y despliegue.
 
 ## Stack y estructura
 
 - **Framework:** Flutter
 - **Lenguaje:** Dart
-- **Autenticación:** Supabase (`supabase_flutter`)
+- **Autenticación y datos:** Supabase (`supabase_flutter`, Postgres y Storage)
 - **Configuración:** `flutter_dotenv` (`.env`)
 - **Pruebas:** `flutter_test`
 
@@ -177,12 +180,16 @@ flow_app/
 │   │   ├── learn/        # Pantalla Aprender y ruta de lecciones
 │   │   ├── community/    # Pantalla Comunidad, modelos y widgets
 │   │   ├── store/        # Pantalla Tienda y skins
-│   │   └── profile/      # Pantalla Perfil, datos y widgets
+│   │   └── profile/      # Perfil, modelos, repositorios, servicios y widgets
 │   ├── shared/
 │   │   ├── models/       # Modelos compartidos de diagramas
+│   │   ├── utils/        # Formateadores compartidos
 │   │   └── widgets/      # Fondo, logo, barra inferior y componentes
 │   ├── app.dart          # Configuración de la aplicación
 │   └── main.dart         # Punto de entrada
+├── supabase/
+│   ├── migrations/       # Esquema, triggers, RLS y bucket de avatares
+│   └── seed_demo.sql     # Datos de demostración opcionales
 ├── test/          # Pruebas
 ├── android/       # Proyecto Android
 ├── ios/           # Proyecto iOS
@@ -207,6 +214,11 @@ flow_app/
 2. En Supabase, ve a **Authentication → Providers → Email** y confirma que el proveedor esté habilitado.
 3. Si desactivas **Authentication → Settings → Confirm email**, el registro inicia sesión automáticamente. Si lo dejas activo, la app pedirá confirmar el correo antes de entrar.
 4. Usa solo la clave pública (`anon` o `publishable`). Nunca incluyas la clave `service_role` en la aplicación.
+5. Ejecuta [`supabase/migrations/20261102000100_profile.sql`](supabase/migrations/20261102000100_profile.sql) en el SQL Editor de Supabase (o con Supabase CLI). Crea las tablas del perfil, los triggers, las políticas RLS y el bucket público `avatars`; también rellena los perfiles de usuarios existentes.
+6. Opcional: edita el correo de [`supabase/seed_demo.sql`](supabase/seed_demo.sql) y ejecútalo para cargar los datos del boceto (1,250 XP, nivel 8, logros, diagramas y actividad).
+7. Verifica en **Storage** que el bucket `avatars` exista y sea público.
+
+El perfil usa las tablas `profiles`, `achievements`, `user_achievements`, `diagrams` y `daily_activity`. Todas tienen RLS: cada usuario solo puede leer y modificar sus propios datos; el catálogo de logros es de solo lectura.
 
 `.env` está ignorado por git y no se versiona. Si falta o está incompleto, la app muestra una pantalla con las instrucciones de configuración.
 
@@ -224,8 +236,8 @@ flutter analyze
 flutter test
 ```
 
-Las pruebas actuales cubren la bienvenida y su navegación (`welcome_screen_test.dart`), el login y el registro con un repositorio falso (`auth_flow_test.dart`), el contenido estático de Inicio y Perfil, el feed y las pestañas de Comunidad, el like local, el feedback de Remix y de la galería, Aprender, la lección interactiva (`lesson_screen_test.dart`), el cambio de foto de perfil (`profile_avatar_test.dart`), Tienda, el cierre de sesión y la ausencia de desbordamientos en pantallas pequeñas. En total son 39 pruebas de widgets.
+Las pruebas actuales cubren la bienvenida y su navegación (`welcome_screen_test.dart`), el login y el registro con un repositorio falso (`auth_flow_test.dart`), el contenido estático de Inicio, el feed y las pestañas de Comunidad, el like local, el feedback de Remix y de la galería, Aprender, la lección interactiva (`lesson_screen_test.dart`), Tienda, el cierre de sesión y la ausencia de desbordamientos en pantallas pequeñas. El perfil está cubierto con un repositorio falso en `profile_db_test.dart` (carga, error y reintento, edición, usuario duplicado, estados vacíos y galería), la subida de foto en `profile_avatar_test.dart`, y la lógica del heatmap en `activity_weeks_test.dart`. En total son 50 pruebas.
 
 ## Estado del proyecto
 
-FlowApp se encuentra en fase de desarrollo. Los bocetos de la experiencia están definidos en [`/docs`](docs/), el tema visual y el shell de navegación están configurados, todas las pantallas documentadas están implementadas como mocks estáticos (Bienvenida, Inicio, Aprender, Comunidad, Tienda y Perfil) y la autenticación con Supabase (registro, inicio y cierre de sesión con sesión persistente) ya es funcional. Actualmente `flutter analyze` no reporta problemas y las 39 pruebas de widgets pasan. La lógica de negocio, la persistencia del progreso y el backend propio siguen pendientes.
+FlowApp se encuentra en fase de desarrollo. Los bocetos de la experiencia están definidos en [`/docs`](docs/), el tema visual y el shell de navegación están configurados, la autenticación con Supabase (registro, inicio y cierre de sesión con sesión persistente) y el perfil (datos, edición, avatar, logros, actividad y diagramas) ya son funcionales. Inicio, Aprender, Comunidad y Tienda siguen usando datos mock. Actualmente `flutter analyze` no reporta problemas y las 50 pruebas pasan. La lógica de negocio del progreso, la persistencia del resto de módulos y el backend propio siguen pendientes.

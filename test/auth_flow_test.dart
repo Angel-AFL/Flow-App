@@ -5,6 +5,7 @@ import 'package:flow_app/app.dart';
 import 'package:flow_app/core/auth/auth_repository.dart';
 
 import 'helpers/fake_auth_repository.dart';
+import 'helpers/fake_profile_repository.dart';
 
 void main() {
   Future<FakeAuthRepository> pumpApp(
@@ -19,7 +20,9 @@ void main() {
 
     final auth = authRepository ?? FakeAuthRepository();
     addTearDown(auth.dispose);
-    await tester.pumpWidget(FlowApp(authRepository: auth));
+    await tester.pumpWidget(
+      FlowApp(authRepository: auth, profileRepository: FakeProfileRepository()),
+    );
 
     return auth;
   }

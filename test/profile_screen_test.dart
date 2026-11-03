@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:flow_app/app.dart';
+import 'package:flow_app/features/profile/my_diagrams_screen.dart';
 
 import 'helpers/fake_auth_repository.dart';
+import 'helpers/fake_profile_repository.dart';
 
 void main() {
   Future<FakeAuthRepository> pumpProfile(
@@ -17,7 +19,12 @@ void main() {
 
     final authRepository = FakeAuthRepository(user: demoUser);
     addTearDown(authRepository.dispose);
-    await tester.pumpWidget(FlowApp(authRepository: authRepository));
+    await tester.pumpWidget(
+      FlowApp(
+        authRepository: authRepository,
+        profileRepository: FakeProfileRepository(),
+      ),
+    );
     await tester.tap(find.text('Perfil'));
     await tester.pumpAndSettle();
 
@@ -53,17 +60,15 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('Ver todos muestra feedback', (tester) async {
+  testWidgets('Ver todos abre la galería de diagramas', (tester) async {
     await pumpProfile(tester);
 
     await tester.ensureVisible(find.text('Ver todos'));
     await tester.tap(find.text('Ver todos'));
-    await tester.pump();
+    await tester.pumpAndSettle();
 
-    expect(
-      find.text('La galería completa estará disponible próximamente.'),
-      findsOneWidget,
-    );
+    expect(find.byType(MyDiagramsScreen), findsOneWidget);
+    expect(find.text('Mi primer diagrama'), findsWidgets);
     expect(tester.takeException(), isNull);
   });
 

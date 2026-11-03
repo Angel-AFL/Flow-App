@@ -3,29 +3,32 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../shared/utils/formatters.dart';
 import '../../../shared/widgets/flow_wordmark.dart';
-import '../models/profile_data.dart';
+import '../models/profile_models.dart';
 
 class ProfileHeader extends StatelessWidget {
   const ProfileHeader({
     super.key,
+    required this.profile,
     required this.onThemeTap,
+    required this.onEditTap,
     this.avatarBytes,
-    this.isPicking = false,
+    this.isUpdatingAvatar = false,
     this.onAvatarTap,
     this.email,
   });
 
+  final UserProfile profile;
   final VoidCallback onThemeTap;
+  final VoidCallback onEditTap;
   final Uint8List? avatarBytes;
-  final bool isPicking;
+  final bool isUpdatingAvatar;
   final VoidCallback? onAvatarTap;
   final String? email;
 
   @override
   Widget build(BuildContext context) {
-    final progress = ProfileMockData.xp / ProfileMockData.nextLevelXp;
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -33,6 +36,24 @@ class ProfileHeader extends StatelessWidget {
           children: [
             const FlowWordmark(logoSize: 24, textSize: 19),
             const Spacer(),
+            IconButton(
+              key: const Key('edit-profile'),
+              onPressed: onEditTap,
+              tooltip: 'Editar perfil',
+              icon: const Icon(
+                Icons.edit_outlined,
+                size: 18,
+                color: AppColors.secondary,
+              ),
+              style: IconButton.styleFrom(
+                backgroundColor: AppColors.surface,
+                minimumSize: const Size(42, 42),
+                shape: const CircleBorder(
+                  side: BorderSide(color: AppColors.border),
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
             IconButton(
               onPressed: onThemeTap,
               tooltip: 'Cambiar tema',
@@ -56,7 +77,7 @@ class ProfileHeader extends StatelessWidget {
           child: Semantics(
             button: onAvatarTap != null,
             label:
-                'Foto de perfil de ${ProfileMockData.name}. '
+                'Foto de perfil de ${profile.displayName}. '
                 'Toca para cambiarla.',
             child: SizedBox(
               width: 92,
@@ -85,12 +106,16 @@ class ProfileHeader extends StatelessWidget {
                           key: const Key('profile-avatar'),
                           onTap: onAvatarTap,
                           customBorder: const CircleBorder(),
-                          child: _AvatarVisual(bytes: avatarBytes),
+                          child: _AvatarVisual(
+                            bytes: avatarBytes,
+                            url: profile.avatarUrl,
+                            initials: profile.initials,
+                          ),
                         ),
                       ),
                     ),
                   ),
-                  if (isPicking)
+                  if (isUpdatingAvatar)
                     Positioned.fill(
                       child: IgnorePointer(
                         child: Center(
@@ -145,10 +170,10 @@ class ProfileHeader extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 12),
-        const Text(
-          ProfileMockData.name,
+        Text(
+          profile.displayName,
           textAlign: TextAlign.center,
-          style: TextStyle(
+          style: const TextStyle(
             color: AppColors.textPrimary,
             fontSize: 23,
             fontWeight: FontWeight.w900,
@@ -160,17 +185,17 @@ class ProfileHeader extends StatelessWidget {
         Text.rich(
           TextSpan(
             children: [
-              const TextSpan(
-                text: ProfileMockData.handle,
-                style: TextStyle(color: AppColors.textSecondary),
+              TextSpan(
+                text: '@${profile.username}',
+                style: const TextStyle(color: AppColors.textSecondary),
               ),
               const TextSpan(
                 text: '  ·  ',
                 style: TextStyle(color: AppColors.textMuted),
               ),
-              const TextSpan(
-                text: ProfileMockData.role,
-                style: TextStyle(color: AppColors.textSecondary),
+              TextSpan(
+                text: profile.role,
+                style: const TextStyle(color: AppColors.textSecondary),
               ),
             ],
           ),
@@ -194,7 +219,7 @@ class ProfileHeader extends StatelessWidget {
         const SizedBox(height: 2),
         TextButton.icon(
           onPressed: onAvatarTap,
-          icon: isPicking
+          icon: isUpdatingAvatar
               ? const SizedBox(
                   width: 13,
                   height: 13,
@@ -204,7 +229,9 @@ class ProfileHeader extends StatelessWidget {
                   ),
                 )
               : const Icon(Icons.photo_camera_outlined, size: 15),
-          label: Text(isPicking ? 'Abriendo galería...' : 'Cambiar foto'),
+          label: Text(
+            isUpdatingAvatar ? 'Actualizando foto...' : 'Cambiar foto',
+          ),
           style: TextButton.styleFrom(
             foregroundColor: AppColors.secondary,
             disabledForegroundColor: AppColors.textMuted,
@@ -220,9 +247,9 @@ class ProfileHeader extends StatelessWidget {
         const SizedBox(height: 10),
         Row(
           children: [
-            const Text(
-              'Nivel ${ProfileMockData.level}',
-              style: TextStyle(
+            Text(
+              'Nivel ${profile.level}',
+              style: const TextStyle(
                 color: AppColors.textSecondary,
                 fontSize: 10.5,
                 fontWeight: FontWeight.w600,
@@ -230,8 +257,8 @@ class ProfileHeader extends StatelessWidget {
             ),
             const Spacer(),
             Text(
-              '${_formatXp(ProfileMockData.xp)} / '
-              '${_formatXp(ProfileMockData.nextLevelXp)} XP',
+              '${formatThousands(profile.xp)} / '
+              '${formatThousands(profile.nextLevelXp)} XP',
               style: const TextStyle(
                 color: AppColors.textMuted,
                 fontSize: 10.5,
@@ -243,8 +270,8 @@ class ProfileHeader extends StatelessWidget {
         const SizedBox(height: 7),
         Semantics(
           label:
-              'Progreso al nivel ${ProfileMockData.level + 1}: '
-              '${ProfileMockData.xp} de ${ProfileMockData.nextLevelXp} XP',
+              'Progreso al nivel ${profile.level + 1}: '
+              '${profile.xp} de ${profile.nextLevelXp} XP',
           child: ClipRRect(
             borderRadius: BorderRadius.circular(999),
             child: SizedBox(
@@ -253,7 +280,7 @@ class ProfileHeader extends StatelessWidget {
                 color: AppColors.primary.withValues(alpha: 0.16),
                 child: FractionallySizedBox(
                   alignment: Alignment.centerLeft,
-                  widthFactor: progress,
+                  widthFactor: profile.levelProgress,
                   child: const DecoratedBox(
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
@@ -269,49 +296,53 @@ class ProfileHeader extends StatelessWidget {
       ],
     );
   }
-
-  static String _formatXp(int value) {
-    final digits = value.toString();
-    final buffer = StringBuffer();
-
-    for (var index = 0; index < digits.length; index++) {
-      if (index > 0 && (digits.length - index) % 3 == 0) {
-        buffer.write(',');
-      }
-      buffer.write(digits[index]);
-    }
-
-    return buffer.toString();
-  }
 }
 
 class _AvatarVisual extends StatelessWidget {
-  const _AvatarVisual({this.bytes});
+  const _AvatarVisual({this.bytes, this.url, required this.initials});
 
   final Uint8List? bytes;
+  final String? url;
+  final String initials;
 
   @override
   Widget build(BuildContext context) {
     final data = bytes;
 
-    if (data == null) {
-      return const _InitialsAvatar();
+    if (data != null) {
+      return Image.memory(
+        data,
+        key: const Key('profile-avatar-image'),
+        width: 84,
+        height: 84,
+        fit: BoxFit.cover,
+        gaplessPlayback: true,
+        errorBuilder: (_, _, _) => _InitialsAvatar(initials: initials),
+      );
     }
 
-    return Image.memory(
-      data,
-      key: const Key('profile-avatar-image'),
-      width: 84,
-      height: 84,
-      fit: BoxFit.cover,
-      gaplessPlayback: true,
-      errorBuilder: (_, _, _) => const _InitialsAvatar(),
-    );
+    final avatarUrl = url;
+
+    if (avatarUrl != null && avatarUrl.isNotEmpty) {
+      return Image.network(
+        avatarUrl,
+        key: const Key('profile-avatar-image'),
+        width: 84,
+        height: 84,
+        fit: BoxFit.cover,
+        gaplessPlayback: true,
+        errorBuilder: (_, _, _) => _InitialsAvatar(initials: initials),
+      );
+    }
+
+    return _InitialsAvatar(initials: initials);
   }
 }
 
 class _InitialsAvatar extends StatelessWidget {
-  const _InitialsAvatar();
+  const _InitialsAvatar({required this.initials});
+
+  final String initials;
 
   @override
   Widget build(BuildContext context) {
@@ -327,9 +358,9 @@ class _InitialsAvatar extends StatelessWidget {
           colors: [Color(0xFF67C7F5), AppColors.secondary],
         ),
       ),
-      child: const Text(
-        ProfileMockData.initials,
-        style: TextStyle(
+      child: Text(
+        initials,
+        style: const TextStyle(
           color: Colors.white,
           fontSize: 27,
           fontWeight: FontWeight.w800,

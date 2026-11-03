@@ -3,32 +3,106 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../../shared/utils/formatters.dart';
 import '../../shared/widgets/stat_card.dart';
+import 'models/profile_models.dart';
+import 'my_diagrams_screen.dart';
+import 'repositories/profile_repository.dart';
 import 'services/profile_image_picker.dart';
 import 'widgets/achievements_card.dart';
 import 'widgets/activity_heatmap.dart';
 import 'widgets/diagram_gallery.dart';
+import 'widgets/edit_profile_sheet.dart';
 import 'widgets/profile_header.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({
     super.key,
-    this.pickImage,
-    this.userEmail,
+    required this.userId,
+    required this.userEmail,
+    required this.repository,
     required this.onSignOut,
+    this.pickImage,
   });
 
-  final PickProfileImage? pickImage;
-  final String? userEmail;
+  final String userId;
+  final String userEmail;
+  final ProfileRepository repository;
   final Future<void> Function() onSignOut;
+  final PickProfileImage? pickImage;
 
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  Uint8List? _avatarBytes;
-  bool _isPicking = false;
+  ProfileSnapshot? _snapshot;
+  ProfileFailure? _error;
+  bool _isLoading = true;
+  bool _isUpdatingAvatar = false;
+  Uint8List? _avatarPreview;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load({bool showLoading = true}) async {
+    if (showLoading) {
+      setState(() {
+        _isLoading = true;
+        _error = null;
+      });
+    }
+
+    try {
+      final snapshot = await widget.repository.loadProfile(widget.userId);
+
+      if (!mounted) {
+        return;
+      }
+
+      setState(() {
+        _snapshot = snapshot;
+        _error = null;
+        _isLoading = false;
+        _avatarPreview = null;
+      });
+    } on ProfileFailure catch (failure) {
+      if (!mounted) {
+        return;
+      }
+
+      if (!showLoading && _snapshot != null) {
+        setState(() => _isLoading = false);
+        _showFeedback(context, failure.message);
+      } else {
+        setState(() {
+          _error = failure;
+          _isLoading = false;
+        });
+      }
+    } catch (_) {
+      if (!mounted) {
+        return;
+      }
+
+      const failure = ProfileFailure(
+        'No pudimos cargar tu perfil. Inténtalo de nuevo.',
+      );
+
+      if (!showLoading && _snapshot != null) {
+        setState(() => _isLoading = false);
+        _showFeedback(context, failure.message);
+      } else {
+        setState(() {
+          _error = failure;
+          _isLoading = false;
+        });
+      }
+    }
+  }
 
   void _showFeedback(BuildContext context, String message) {
     ScaffoldMessenger.of(context)
@@ -55,22 +129,55 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> _pickAvatar() async {
-    if (_isPicking) {
+    if (_isUpdatingAvatar) {
       return;
     }
 
-    setState(() => _isPicking = true);
+    setState(() => _isUpdatingAvatar = true);
 
     try {
       final picker = widget.pickImage ?? pickProfileImageFromGallery;
-      final bytes = await picker();
+      final picked = await picker();
 
-      if (!mounted || bytes == null) {
+      if (!mounted || picked == null) {
         return;
       }
 
-      setState(() => _avatarBytes = bytes);
-      _showFeedback(context, 'Foto de perfil actualizada.');
+      setState(() => _avatarPreview = picked.bytes);
+
+      try {
+        final result = await widget.repository.uploadAvatar(
+          userId: widget.userId,
+          image: picked,
+        );
+
+        if (!mounted) {
+          return;
+        }
+
+        setState(() {
+          final snapshot = _snapshot;
+          if (snapshot != null) {
+            _snapshot = snapshot.copyWith(
+              profile: snapshot.profile.copyWith(avatarUrl: result.url),
+            );
+          }
+        });
+        _showFeedback(context, 'Foto de perfil actualizada.');
+      } on ProfileFailure catch (failure) {
+        if (mounted) {
+          setState(() => _avatarPreview = null);
+          _showFeedback(context, failure.message);
+        }
+      } catch (_) {
+        if (mounted) {
+          setState(() => _avatarPreview = null);
+          _showFeedback(
+            context,
+            'No se pudo actualizar la foto. Inténtalo de nuevo.',
+          );
+        }
+      }
     } catch (_) {
       if (mounted) {
         _showFeedback(
@@ -80,9 +187,42 @@ class _ProfileScreenState extends State<ProfileScreen> {
       }
     } finally {
       if (mounted) {
-        setState(() => _isPicking = false);
+        setState(() => _isUpdatingAvatar = false);
       }
     }
+  }
+
+  Future<void> _editProfile() async {
+    final snapshot = _snapshot;
+
+    if (snapshot == null) {
+      return;
+    }
+
+    final updated = await showModalBottomSheet<UserProfile>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      barrierColor: Colors.black54,
+      constraints: const BoxConstraints(maxWidth: 520),
+      builder: (_) => EditProfileSheet(
+        profile: snapshot.profile,
+        onSave: (edit) =>
+            widget.repository.updateProfile(userId: widget.userId, edit: edit),
+      ),
+    );
+
+    if (!mounted || updated == null) {
+      return;
+    }
+
+    setState(() {
+      final current = _snapshot;
+      if (current != null) {
+        _snapshot = current.copyWith(profile: updated);
+      }
+    });
+    _showFeedback(context, 'Perfil actualizado.');
   }
 
   Future<void> _logout(BuildContext context) async {
@@ -99,81 +239,232 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
+  void _openDiagrams() {
+    final diagrams = _snapshot?.diagrams ?? const <ProfileDiagram>[];
+
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => MyDiagramsScreen(diagrams: diagrams),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const SafeArea(
+        child: Center(
+          child: CircularProgressIndicator(color: AppColors.primary),
+        ),
+      );
+    }
+
+    final error = _error;
+    if (error != null) {
+      return SafeArea(
+        child: _ProfileError(
+          message: error.message,
+          onRetry: _load,
+          onSignOut: () => _logout(context),
+        ),
+      );
+    }
+
+    final snapshot = _snapshot;
+    if (snapshot == null) {
+      return const SafeArea(
+        child: Center(
+          child: CircularProgressIndicator(color: AppColors.primary),
+        ),
+      );
+    }
+
+    final badges = [
+      ...snapshot.achievements.where((achievement) => achievement.unlocked),
+      ...snapshot.achievements.where((achievement) => !achievement.unlocked),
+    ].take(4).toList();
+
     return SafeArea(
       bottom: false,
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 480),
+      child: RefreshIndicator(
+        onRefresh: () => _load(showLoading: false),
+        color: AppColors.primary,
+        backgroundColor: AppColors.surface,
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 480),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  ProfileHeader(
+                    profile: snapshot.profile,
+                    avatarBytes: _avatarPreview,
+                    isUpdatingAvatar: _isUpdatingAvatar,
+                    email: widget.userEmail,
+                    onAvatarTap: _isUpdatingAvatar ? null : _pickAvatar,
+                    onEditTap: _editProfile,
+                    onThemeTap: () => _showFeedback(
+                      context,
+                      'El tema claro estará disponible próximamente.',
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: StatCard(
+                          value: formatThousands(snapshot.profile.xp),
+                          label: 'XP total',
+                          color: AppColors.primary,
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: StatCard(
+                          value: '${snapshot.profile.streakDays}',
+                          label: 'Días de racha',
+                          color: AppColors.gold,
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: StatCard(
+                          value: '${snapshot.profile.lessonsCompleted}',
+                          label: 'Lecciones',
+                          color: AppColors.secondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+                  AchievementsCard(
+                    achievements: badges,
+                    unlocked: snapshot.unlockedAchievements,
+                    total: snapshot.totalAchievements,
+                  ),
+                  const SizedBox(height: 22),
+                  ActivityHeatmap(
+                    weeks: snapshot.activityWeeks,
+                    hasActivity: snapshot.hasActivity,
+                  ),
+                  const SizedBox(height: 22),
+                  DiagramGallery(
+                    diagrams: snapshot.diagrams,
+                    onViewAll: _openDiagrams,
+                  ),
+                  const SizedBox(height: 14),
+                  Center(
+                    child: TextButton.icon(
+                      onPressed: () => _logout(context),
+                      icon: const Icon(Icons.logout_rounded, size: 16),
+                      label: const Text('Cerrar sesión'),
+                      style: TextButton.styleFrom(
+                        foregroundColor: AppColors.textMuted,
+                        textStyle: const TextStyle(
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ProfileError extends StatelessWidget {
+  const _ProfileError({
+    required this.message,
+    required this.onRetry,
+    required this.onSignOut,
+  });
+
+  final String message;
+  final VoidCallback onRetry;
+  final VoidCallback onSignOut;
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      physics: const AlwaysScrollableScrollPhysics(),
+      padding: const EdgeInsets.fromLTRB(24, 24, 24, 24),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 480),
+          child: Container(
+            padding: const EdgeInsets.all(22),
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: AppColors.border),
+            ),
             child: Column(
+              mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                ProfileHeader(
-                  avatarBytes: _avatarBytes,
-                  isPicking: _isPicking,
-                  email: widget.userEmail,
-                  onAvatarTap: _isPicking ? null : _pickAvatar,
-                  onThemeTap: () => _showFeedback(
-                    context,
-                    'El tema claro estará disponible próximamente.',
-                  ),
-                ),
-                const SizedBox(height: 20),
-                const Row(
-                  children: [
-                    Expanded(
-                      child: StatCard(
-                        value: '1,250',
-                        label: 'XP total',
-                        color: AppColors.primary,
-                      ),
-                    ),
-                    SizedBox(width: 10),
-                    Expanded(
-                      child: StatCard(
-                        value: '7',
-                        label: 'Días de racha',
-                        color: AppColors.gold,
-                      ),
-                    ),
-                    SizedBox(width: 10),
-                    Expanded(
-                      child: StatCard(
-                        value: '8',
-                        label: 'Lecciones',
-                        color: AppColors.secondary,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 24),
-                const AchievementsCard(),
-                const SizedBox(height: 22),
-                const ActivityHeatmap(),
-                const SizedBox(height: 22),
-                DiagramGallery(
-                  onViewAll: () => _showFeedback(
-                    context,
-                    'La galería completa estará disponible próximamente.',
-                  ),
+                const Icon(
+                  Icons.cloud_off_rounded,
+                  size: 34,
+                  color: AppColors.textMuted,
                 ),
                 const SizedBox(height: 14),
-                Center(
-                  child: TextButton.icon(
-                    onPressed: () => _logout(context),
-                    icon: const Icon(Icons.logout_rounded, size: 16),
-                    label: const Text('Cerrar sesión'),
-                    style: TextButton.styleFrom(
-                      foregroundColor: AppColors.textMuted,
+                const Text(
+                  'No pudimos cargar tu perfil',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: AppColors.textPrimary,
+                    fontSize: 17,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  message,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 12.5,
+                    height: 1.45,
+                  ),
+                ),
+                const SizedBox(height: 18),
+                SizedBox(
+                  height: 46,
+                  child: FilledButton(
+                    onPressed: onRetry,
+                    style: FilledButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: AppColors.onPrimary,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(13),
+                      ),
                       textStyle: const TextStyle(
-                        fontSize: 11.5,
-                        fontWeight: FontWeight.w600,
+                        fontSize: 13.5,
+                        fontWeight: FontWeight.w800,
                       ),
                     ),
+                    child: const Text('Reintentar'),
                   ),
+                ),
+                const SizedBox(height: 6),
+                TextButton(
+                  onPressed: onSignOut,
+                  style: TextButton.styleFrom(
+                    foregroundColor: AppColors.textMuted,
+                    textStyle: const TextStyle(
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  child: const Text('Cerrar sesión'),
                 ),
               ],
             ),
