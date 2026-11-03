@@ -338,7 +338,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       const SizedBox(width: 10),
                       Expanded(
                         child: StatCard(
-                          value: '${snapshot.profile.streakDays}',
+                          value: '${snapshot.profile.effectiveStreakDays}',
                           label: 'Días de racha',
                           color: AppColors.gold,
                         ),

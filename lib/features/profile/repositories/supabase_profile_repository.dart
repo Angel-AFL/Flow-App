@@ -296,6 +296,7 @@ class SupabaseProfileRepository implements ProfileRepository {
       nextLevelXp: (row['next_level_xp'] as num?)?.toInt() ?? 500,
       streakDays: (row['streak_days'] as num?)?.toInt() ?? 0,
       lessonsCompleted: (row['lessons_completed'] as num?)?.toInt() ?? 0,
+      lastActivityDate: _dateFrom(row['last_activity_date']),
       coins: (row['coins'] as num?)?.toInt() ?? 240,
       equippedSkin: equippedSkin,
       equippedTitle: equippedTitle,
@@ -366,6 +367,14 @@ class SupabaseProfileRepository implements ProfileRepository {
     }
 
     return cleaned == 'jpeg' ? 'jpg' : cleaned;
+  }
+
+  static DateTime? _dateFrom(Object? value) {
+    if (value is String) {
+      return DateTime.tryParse(value);
+    }
+
+    return null;
   }
 
   static String _contentTypeFor(PickedProfileImage image) {

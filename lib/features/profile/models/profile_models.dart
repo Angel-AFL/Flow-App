@@ -17,6 +17,7 @@ class UserProfile {
     required this.nextLevelXp,
     required this.streakDays,
     required this.lessonsCompleted,
+    this.lastActivityDate,
     this.avatarUrl,
     this.coins = 240,
     this.equippedSkin = DiagramSkin.classic,
@@ -33,16 +34,45 @@ class UserProfile {
   final int nextLevelXp;
   final int streakDays;
   final int lessonsCompleted;
+  final DateTime? lastActivityDate;
   final int coins;
   final DiagramSkin equippedSkin;
   final ProfileTitle equippedTitle;
+
+  static const int xpPerLevel = 500;
 
   double get levelProgress {
     if (nextLevelXp <= 0) {
       return 0;
     }
 
-    return (xp / nextLevelXp).clamp(0.0, 1.0);
+    final levelStart = (level - 1) * xpPerLevel;
+    final span = nextLevelXp - levelStart;
+
+    if (span <= 0) {
+      return 0;
+    }
+
+    return ((xp - levelStart) / span).clamp(0.0, 1.0);
+  }
+
+  int get effectiveStreakDays {
+    final last = lastActivityDate;
+
+    if (last == null) {
+      return 0;
+    }
+
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final lastDay = DateTime(last.year, last.month, last.day);
+    final difference = today.difference(lastDay).inDays;
+
+    if (difference < 0 || difference > 1) {
+      return 0;
+    }
+
+    return streakDays;
   }
 
   String get initials {
@@ -76,6 +106,7 @@ class UserProfile {
     int? nextLevelXp,
     int? streakDays,
     int? lessonsCompleted,
+    DateTime? lastActivityDate,
     int? coins,
     DiagramSkin? equippedSkin,
     ProfileTitle? equippedTitle,
@@ -91,6 +122,7 @@ class UserProfile {
       nextLevelXp: nextLevelXp ?? this.nextLevelXp,
       streakDays: streakDays ?? this.streakDays,
       lessonsCompleted: lessonsCompleted ?? this.lessonsCompleted,
+      lastActivityDate: lastActivityDate ?? this.lastActivityDate,
       coins: coins ?? this.coins,
       equippedSkin: equippedSkin ?? this.equippedSkin,
       equippedTitle: equippedTitle ?? this.equippedTitle,
