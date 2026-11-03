@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+import '../../core/auth/auth_repository.dart';
 import '../../features/community/community_screen.dart';
 import '../../features/home/home_screen.dart';
 import '../../features/learn/learn_screen.dart';
@@ -9,7 +11,10 @@ import '../../shared/widgets/flow_bottom_nav.dart';
 import '../theme/app_colors.dart';
 
 class AppShell extends StatefulWidget {
-  const AppShell({super.key});
+  const AppShell({super.key, required this.user, required this.onSignOut});
+
+  final AppUser user;
+  final Future<void> Function() onSignOut;
 
   @override
   State<AppShell> createState() => _AppShellState();
@@ -18,12 +23,12 @@ class AppShell extends StatefulWidget {
 class _AppShellState extends State<AppShell> {
   int _currentIndex = 0;
 
-  static const List<Widget> _screens = [
-    HomeScreen(),
-    LearnScreen(),
-    CommunityScreen(),
-    StoreScreen(),
-    ProfileScreen(),
+  List<Widget> get _screens => [
+    const HomeScreen(),
+    const LearnScreen(),
+    const CommunityScreen(),
+    const StoreScreen(),
+    ProfileScreen(userEmail: widget.user.email, onSignOut: widget.onSignOut),
   ];
 
   @override

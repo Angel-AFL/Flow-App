@@ -3,8 +3,10 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:flow_app/app.dart';
 
+import 'helpers/fake_auth_repository.dart';
+
 void main() {
-  Future<void> pumpProfile(
+  Future<FakeAuthRepository> pumpProfile(
     WidgetTester tester, {
     Size size = const Size(390, 844),
   }) async {
@@ -13,18 +15,20 @@ void main() {
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
 
-    await tester.pumpWidget(const FlowApp());
-    await tester.ensureVisible(find.text('Comenzar'));
-    await tester.tap(find.text('Comenzar'));
-    await tester.pumpAndSettle();
+    final authRepository = FakeAuthRepository(user: demoUser);
+    addTearDown(authRepository.dispose);
+    await tester.pumpWidget(FlowApp(authRepository: authRepository));
     await tester.tap(find.text('Perfil'));
     await tester.pumpAndSettle();
+
+    return authRepository;
   }
 
   testWidgets('muestra el perfil estático', (tester) async {
     await pumpProfile(tester);
 
     expect(find.text('Estudiante Flow'), findsOneWidget);
+    expect(find.text('estudiante@flow.app'), findsOneWidget);
     expect(find.text('Nivel 8'), findsOneWidget);
     expect(find.text('1,250 / 1,500 XP'), findsOneWidget);
     expect(find.text('1,250'), findsOneWidget);
@@ -64,12 +68,13 @@ void main() {
   });
 
   testWidgets('Cerrar sesión vuelve a Bienvenida', (tester) async {
-    await pumpProfile(tester);
+    final authRepository = await pumpProfile(tester);
 
     await tester.ensureVisible(find.text('Cerrar sesión'));
     await tester.tap(find.text('Cerrar sesión'));
     await tester.pumpAndSettle();
 
+    expect(authRepository.signOutCalls, 1);
     expect(find.text('Comenzar'), findsOneWidget);
     expect(find.text('Estudiante Flow'), findsNothing);
     expect(tester.takeException(), isNull);

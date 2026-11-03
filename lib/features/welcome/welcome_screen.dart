@@ -1,17 +1,31 @@
 import 'package:flutter/material.dart';
 
-import '../../core/navigation/app_shell.dart';
+import '../../core/auth/auth_repository.dart';
 import '../../core/theme/app_colors.dart';
 import '../../shared/widgets/flow_background.dart';
 import '../../shared/widgets/flow_wordmark.dart';
+import '../auth/login_screen.dart';
+import '../auth/sign_up_screen.dart';
 import 'widgets/welcome_diagram.dart';
 
 class WelcomeScreen extends StatelessWidget {
-  const WelcomeScreen({super.key});
+  const WelcomeScreen({super.key, required this.authRepository});
 
-  void _enterApp(BuildContext context) {
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute<void>(builder: (_) => const AppShell()),
+  final AuthRepository authRepository;
+
+  void _openSignUp(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => SignUpScreen(authRepository: authRepository),
+      ),
+    );
+  }
+
+  void _openLogin(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => LoginScreen(authRepository: authRepository),
+      ),
     );
   }
 
@@ -112,7 +126,7 @@ class WelcomeScreen extends StatelessWidget {
                             SizedBox(
                               height: 54,
                               child: FilledButton(
-                                onPressed: () => _enterApp(context),
+                                onPressed: () => _openSignUp(context),
                                 style: FilledButton.styleFrom(
                                   backgroundColor: AppColors.primary,
                                   foregroundColor: AppColors.onPrimary,
@@ -138,7 +152,7 @@ class WelcomeScreen extends StatelessWidget {
                             SizedBox(
                               height: 52,
                               child: OutlinedButton(
-                                onPressed: () => _enterApp(context),
+                                onPressed: () => _openLogin(context),
                                 style: OutlinedButton.styleFrom(
                                   foregroundColor: AppColors.textPrimary,
                                   side: const BorderSide(

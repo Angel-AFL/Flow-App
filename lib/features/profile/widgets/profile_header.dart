@@ -13,12 +13,14 @@ class ProfileHeader extends StatelessWidget {
     this.avatarBytes,
     this.isPicking = false,
     this.onAvatarTap,
+    this.email,
   });
 
   final VoidCallback onThemeTap;
   final Uint8List? avatarBytes;
   final bool isPicking;
   final VoidCallback? onAvatarTap;
+  final String? email;
 
   @override
   Widget build(BuildContext context) {
@@ -175,6 +177,20 @@ class ProfileHeader extends StatelessWidget {
           textAlign: TextAlign.center,
           style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w500),
         ),
+        if (email != null && email!.isNotEmpty) ...[
+          const SizedBox(height: 4),
+          Text(
+            email!,
+            textAlign: TextAlign.center,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              color: AppColors.textMuted,
+              fontSize: 10.5,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
         const SizedBox(height: 2),
         TextButton.icon(
           onPressed: onAvatarTap,

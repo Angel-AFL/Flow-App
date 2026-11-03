@@ -2,7 +2,7 @@
 
 > Aprende a pensar paso a paso.
 
-**Estado:** En desarrollo · **Stack:** Flutter + Dart · **Última etapa:** Mocks estáticos de todas las pantallas
+**Estado:** En desarrollo · **Stack:** Flutter + Dart + Supabase · **Última etapa:** Autenticación real con Supabase (email y contraseña)
 
 ## Descripción
 
@@ -52,36 +52,38 @@ La carpeta [`/docs`](docs/) contiene todos los bocetos de alta fidelidad de la a
 
 ## Módulos implementados
 
-El repositorio ya cuenta con la estructura base de la aplicación, el tema visual y la primera pantalla del producto, construida como mock estático.
+El repositorio ya cuenta con la estructura base de la aplicación, el tema visual, la autenticación real con Supabase y las pantallas del producto construidas como mocks estáticos.
 
 | Módulo | Estado | Notas |
 | --- | --- | --- |
 | Proyecto Flutter multiplataforma | Implementado | Soporte para Android, iOS, Web, Windows, macOS y Linux. |
 | Tema visual base | Implementado | Paleta extraída de los bocetos de [`/docs`](docs/) y estilos de texto centralizados. |
 | Shell de navegación | Implementado (mock) | Barra inferior con las pestañas Inicio, Aprender, Comunidad, Tienda y Perfil; todas muestran su pantalla correspondiente. |
-| Pantalla Bienvenida | Implementado (mock) | Logo, diagrama decorativo, titular, accesos “Comenzar” y “Ya tengo una cuenta”, y feedback para el cambio de tema. |
+| Autenticación (Supabase) | Implementado | Registro e inicio de sesión con email y contraseña, cierre de sesión, sesión persistente y mensajes de error en español. El acceso a la app requiere sesión. |
+| Pantalla Bienvenida | Implementado (mock) | Logo, diagrama decorativo, titular, accesos “Comenzar” (registro) y “Ya tengo una cuenta” (login), y feedback para el cambio de tema. |
 | Pantalla Inicio | Implementado (mock) | Saludo, racha, monedas, ruta actual, progreso semanal, misión recomendada y meta diaria con datos estáticos. |
 | Pantalla Aprender | Implementado (mock) | Resumen de unidad, progreso y ruta con lecciones completadas, actuales y unidades bloqueadas. La lección 3 es interactiva: permite armar un diagrama lineal de tres bloques y actualiza el progreso en memoria. |
 | Pantalla Comunidad | Implementado (mock) | Feed con pestañas, reto semanal, publicaciones con diagramas, likes locales y feedback para comentarios, Remix y menú de publicación. |
 | Pantalla Tienda | Implementado (mock) | Saldo de monedas y skins Clásico, Pixel Art y Cyber con precios estáticos. |
-| Pantalla Perfil | Implementado (mock) | Nivel y XP, estadísticas, logros, heatmap de actividad, “Mis diagramas” y cierre de sesión mock. Permite cambiar la foto de perfil desde la galería (solo en memoria). |
-| Módulos funcionales de FlowApp | Pendiente | Sin lógica de negocio, persistencia ni backend todavía. |
+| Pantalla Perfil | Implementado (mock) | Nivel y XP, estadísticas, logros, heatmap de actividad, “Mis diagramas” y cierre de sesión real con Supabase. Permite cambiar la foto de perfil desde la galería (solo en memoria). |
+| Módulos funcionales de FlowApp | Parcial | La autenticación ya es real; el progreso, la comunidad y la tienda siguen usando datos mock y no hay persistencia de XP ni backend propio. |
 
-> **Nota:** las pantallas de la carpeta [`/docs`](docs/) son diseños y bocetos de referencia. Todas las pantallas documentadas replican sus bocetos con datos estáticos; la lógica de negocio, la persistencia y la autenticación real siguen pendientes.
+> **Nota:** las pantallas de la carpeta [`/docs`](docs/) son diseños y bocetos de referencia. Todas las pantallas documentadas replican sus bocetos con datos estáticos; la autenticación ya está conectada a Supabase, mientras que la lógica de negocio y la persistencia del progreso siguen pendientes.
 
 ### Detalle de la implementación actual
 
 - **Tema:** colores y estilos centralizados en [`lib/core/theme/`](lib/core/theme/), con paleta oscura, verde neón y azul cian extraídos de los bocetos.
-- **Bienvenida:** pantalla inicial en [`lib/features/welcome/`](lib/features/welcome/) con el diagrama decorativo, los accesos al shell y feedback para el cambio de tema. El botón “Cerrar sesión” del Perfil vuelve a esta pantalla.
+- **Autenticación:** capa en [`lib/core/auth/`](lib/core/auth/) con una interfaz `AuthRepository`, la implementación `SupabaseAuthRepository` y `AuthGate`, que decide entre Bienvenida y el shell según la sesión. Las pantallas de login y registro viven en [`lib/features/auth/`](lib/features/auth/) con validaciones, estados de carga y errores traducidos al español.
+- **Bienvenida:** pantalla inicial en [`lib/features/welcome/`](lib/features/welcome/) con el diagrama decorativo y el feedback para el cambio de tema. “Comenzar” abre el registro y “Ya tengo una cuenta” abre el login.
 - **Inicio:** composición responsive en [`lib/features/home/home_screen.dart`](lib/features/home/home_screen.dart), con ancho máximo de 480 px en pantallas grandes y desplazamiento vertical en pantallas pequeñas.
 - **Widgets compartidos:** fondo, logo, wordmark, encabezados de sección, tarjetas de estadísticas y previsualización de diagramas en [`lib/shared/`](lib/shared/).
 - **Aprender:** resumen de unidad y ruta de lecciones en [`lib/features/learn/`](lib/features/learn/), con conectores y estados de lección completada, actual y bloqueada. La lección 3 abre una pantalla interactiva que valida el orden **Inicio → Mostrar mensaje → Fin**; al aprobarla suma +50 XP y marca la unidad al 100% en memoria. Los datos de la lección viven en [`models/diagram_lesson.dart`](lib/features/learn/models/diagram_lesson.dart), listos para sustituirse por una fuente con base de datos.
 - **Comunidad:** feed en [`lib/features/community/community_screen.dart`](lib/features/community/community_screen.dart), con datos mock por pestaña, banner de workshop, publicaciones y previsualizaciones de diagramas en [`lib/features/community/widgets/`](lib/features/community/widgets/). Los likes se actualizan localmente y las acciones pendientes muestran un `SnackBar`.
 - **Tienda:** saldo y catálogo de skins en [`lib/features/store/`](lib/features/store/), con precios estáticos y la skin Clásico equipada.
-- **Perfil:** datos mock en [`lib/features/profile/`](lib/features/profile/), con avatar, nivel y XP, estadísticas, logros, heatmap de actividad, diagramas propios y cierre de sesión. La foto de perfil se puede cambiar desde la galería tocando el avatar o “Cambiar foto”; se mantiene en memoria durante la sesión y la selección está aislada en [`services/profile_image_picker.dart`](lib/features/profile/services/profile_image_picker.dart) para conectarla después a una BD.
-- **Navegación:** la aplicación inicia en Bienvenida; el shell con `IndexedStack` y la barra inferior de cinco pestañas están en [`lib/core/navigation/app_shell.dart`](lib/core/navigation/app_shell.dart) y [`lib/shared/widgets/flow_bottom_nav.dart`](lib/shared/widgets/flow_bottom_nav.dart).
-- **Datos:** todos los valores (`7`, `240`, `38%`, `1,250 XP`, `2/3`, `48 likes`, `3 de 12`, etc.) son constantes locales; no hay persistencia ni backend.
-- **Dependencias:** se usa Flutter, `flutter_test` e `image_picker` para seleccionar la foto de perfil desde la galería. En iOS se añadió `NSPhotoLibraryUsageDescription`; en macOS, el permiso de lectura de archivos seleccionados por el usuario.
+- **Perfil:** datos mock en [`lib/features/profile/`](lib/features/profile/), con avatar, nivel y XP, estadísticas, logros, heatmap de actividad, diagramas propios y cierre de sesión. Muestra el correo de la sesión de Supabase y “Cerrar sesión” invalida la sesión real. La foto de perfil se puede cambiar desde la galería tocando el avatar o “Cambiar foto”; se mantiene en memoria durante la sesión y la selección está aislada en [`services/profile_image_picker.dart`](lib/features/profile/services/profile_image_picker.dart) para conectarla después a una BD.
+- **Navegación:** `AuthGate` es la raíz de la app; sin sesión muestra Bienvenida y con sesión muestra el shell con `IndexedStack`. La barra inferior de cinco pestañas está en [`lib/core/navigation/app_shell.dart`](lib/core/navigation/app_shell.dart) y [`lib/shared/widgets/flow_bottom_nav.dart`](lib/shared/widgets/flow_bottom_nav.dart).
+- **Datos:** los valores de progreso, comunidad y tienda (`7`, `240`, `38%`, `1,250 XP`, `2/3`, `48 likes`, `3 de 12`, etc.) siguen siendo constantes locales. La identidad y la sesión ya se gestionan con Supabase.
+- **Dependencias:** se usa Flutter, `supabase_flutter` para autenticación, `flutter_dotenv` para leer las claves desde `.env`, `flutter_test` e `image_picker` para seleccionar la foto de perfil desde la galería. En iOS se añadió `NSPhotoLibraryUsageDescription`; en macOS, el permiso de lectura de archivos seleccionados por el usuario y acceso de red saliente.
 
 ## Pendientes por hacer
 
@@ -95,8 +97,8 @@ El repositorio ya cuenta con la estructura base de la aplicación, el tema visua
 ### Autenticación y onboarding
 
 - [x] Implementar la pantalla de bienvenida (mock estático).
-- [ ] Implementar el registro de usuarios.
-- [ ] Implementar el inicio y cierre de sesión.
+- [x] Implementar el registro de usuarios.
+- [x] Implementar el inicio y cierre de sesión.
 - [ ] Implementar la recuperación de contraseña.
 
 ### Navegación y pantallas principales
@@ -144,6 +146,7 @@ El repositorio ya cuenta con la estructura base de la aplicación, el tema visua
 
 ### Infraestructura
 
+- [x] Integrar Supabase para autenticación (email y contraseña).
 - [ ] Definir e implementar el backend y la API.
 - [ ] Implementar la persistencia de datos.
 - [x] Implementar pruebas de widgets para Bienvenida, Inicio, Aprender, Comunidad, Tienda y Perfil.
@@ -154,6 +157,8 @@ El repositorio ya cuenta con la estructura base de la aplicación, el tema visua
 
 - **Framework:** Flutter
 - **Lenguaje:** Dart
+- **Autenticación:** Supabase (`supabase_flutter`)
+- **Configuración:** `flutter_dotenv` (`.env`)
 - **Pruebas:** `flutter_test`
 
 ```text
@@ -161,10 +166,13 @@ flow_app/
 ├── docs/          # Bocetos de las pantallas
 ├── lib/
 │   ├── core/
+│   │   ├── auth/         # Repositorio de auth, Supabase y AuthGate
+│   │   ├── config/       # Lectura de .env y configuración de Supabase
 │   │   ├── navigation/   # Shell de navegación
 │   │   └── theme/        # Colores y tema
 │   ├── features/
 │   │   ├── welcome/      # Pantalla de bienvenida y diagrama
+│   │   ├── auth/         # Login, registro y widgets de formulario
 │   │   ├── home/         # Pantalla Inicio y widgets
 │   │   ├── learn/        # Pantalla Aprender y ruta de lecciones
 │   │   ├── community/    # Pantalla Comunidad, modelos y widgets
@@ -183,8 +191,24 @@ flow_app/
 ├── macos/         # Proyecto macOS
 ├── linux/         # Proyecto Linux
 ├── pubspec.yaml   # Dependencias y configuración
+├── .env.example   # Plantilla de variables de Supabase
 └── README.md
 ```
+
+### Configuración de Supabase
+
+1. Copia `.env.example` a `.env` en la raíz del proyecto y completa las claves del panel de Supabase (Project Settings → API):
+
+   ```text
+   SUPABASE_URL=https://tu-proyecto.supabase.co
+   SUPABASE_ANON_KEY=tu-clave-publica
+   ```
+
+2. En Supabase, ve a **Authentication → Providers → Email** y confirma que el proveedor esté habilitado.
+3. Si desactivas **Authentication → Settings → Confirm email**, el registro inicia sesión automáticamente. Si lo dejas activo, la app pedirá confirmar el correo antes de entrar.
+4. Usa solo la clave pública (`anon` o `publishable`). Nunca incluyas la clave `service_role` en la aplicación.
+
+`.env` está ignorado por git y no se versiona. Si falta o está incompleto, la app muestra una pantalla con las instrucciones de configuración.
 
 ### Ejecución
 
@@ -200,8 +224,8 @@ flutter analyze
 flutter test
 ```
 
-Las pruebas actuales cubren la bienvenida y su navegación (`welcome_screen_test.dart`), el contenido estático de Inicio y Perfil, el feed y las pestañas de Comunidad, el like local, el feedback de Remix y de la galería, Aprender, la lección interactiva (`lesson_screen_test.dart`), el cambio de foto de perfil (`profile_avatar_test.dart`), Tienda, el cierre de sesión y la ausencia de desbordamientos en pantallas pequeñas. En total son 29 pruebas de widgets.
+Las pruebas actuales cubren la bienvenida y su navegación (`welcome_screen_test.dart`), el login y el registro con un repositorio falso (`auth_flow_test.dart`), el contenido estático de Inicio y Perfil, el feed y las pestañas de Comunidad, el like local, el feedback de Remix y de la galería, Aprender, la lección interactiva (`lesson_screen_test.dart`), el cambio de foto de perfil (`profile_avatar_test.dart`), Tienda, el cierre de sesión y la ausencia de desbordamientos en pantallas pequeñas. En total son 39 pruebas de widgets.
 
 ## Estado del proyecto
 
-FlowApp se encuentra en fase de diseño y estructuración. Los bocetos de la experiencia están definidos en [`/docs`](docs/), el tema visual y el shell de navegación están configurados, y todas las pantallas documentadas ya están implementadas como mocks estáticos: Bienvenida, Inicio, Aprender, Comunidad, Tienda y Perfil. Actualmente `flutter analyze` no reporta problemas y las 29 pruebas de widgets pasan. La lógica de negocio, la persistencia, el backend y la autenticación real están pendientes.
+FlowApp se encuentra en fase de desarrollo. Los bocetos de la experiencia están definidos en [`/docs`](docs/), el tema visual y el shell de navegación están configurados, todas las pantallas documentadas están implementadas como mocks estáticos (Bienvenida, Inicio, Aprender, Comunidad, Tienda y Perfil) y la autenticación con Supabase (registro, inicio y cierre de sesión con sesión persistente) ya es funcional. Actualmente `flutter analyze` no reporta problemas y las 39 pruebas de widgets pasan. La lógica de negocio, la persistencia del progreso y el backend propio siguen pendientes.

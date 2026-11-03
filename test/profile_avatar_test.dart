@@ -28,7 +28,9 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         theme: AppTheme.dark,
-        home: Scaffold(body: ProfileScreen(pickImage: pickImage)),
+        home: Scaffold(
+          body: ProfileScreen(pickImage: pickImage, onSignOut: () async {}),
+        ),
       ),
     );
     await tester.pumpAndSettle();
