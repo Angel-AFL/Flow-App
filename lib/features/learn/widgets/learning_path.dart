@@ -3,75 +3,45 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../models/learning_models.dart';
 
-enum _StepKind { completedLesson, currentLesson, lockedUnit }
+enum _StepKind {
+  completedLesson,
+  currentLesson,
+  lockedLesson,
+  lockedUnit,
+  comingSoonUnit,
+}
 
-class _PathStep {
-  const _PathStep({
+class _PathRowData {
+  const _PathRowData({
     required this.kind,
     required this.kicker,
     required this.title,
     this.subtitle,
+    this.onTap,
+    this.busy = false,
   });
 
   final _StepKind kind;
   final String kicker;
   final String title;
   final String? subtitle;
+  final VoidCallback? onTap;
+  final bool busy;
 }
-
-const List<_PathStep> _steps = [
-  _PathStep(
-    kind: _StepKind.completedLesson,
-    kicker: 'LECCIÓN 1',
-    title: '¿Qué es un diagrama?',
-  ),
-  _PathStep(
-    kind: _StepKind.completedLesson,
-    kicker: 'LECCIÓN 2',
-    title: 'Conoce los símbolos',
-  ),
-  _PathStep(
-    kind: _StepKind.currentLesson,
-    kicker: 'LECCIÓN 3',
-    title: 'Tu primer diagrama',
-    subtitle: '+50 XP · 5 min',
-  ),
-  _PathStep(
-    kind: _StepKind.lockedUnit,
-    kicker: 'UNIDAD 2',
-    title: 'Condicionales — If / Else',
-    subtitle: 'Completa la unidad anterior',
-  ),
-  _PathStep(
-    kind: _StepKind.lockedUnit,
-    kicker: 'UNIDAD 3',
-    title: 'Ciclos — While / For',
-    subtitle: 'Completa la unidad anterior',
-  ),
-  _PathStep(
-    kind: _StepKind.lockedUnit,
-    kicker: 'UNIDAD 4',
-    title: 'Funciones',
-    subtitle: 'Completa la unidad anterior',
-  ),
-  _PathStep(
-    kind: _StepKind.lockedUnit,
-    kicker: 'UNIDAD 5',
-    title: 'Recursividad',
-    subtitle: 'Completa la unidad anterior',
-  ),
-];
 
 class LearningPath extends StatelessWidget {
   const LearningPath({
     super.key,
-    this.lessonCompleted = false,
-    this.onCurrentLessonTap,
+    required this.snapshot,
+    required this.onLessonTap,
+    this.busyLessonId,
   });
 
-  final bool lessonCompleted;
-  final VoidCallback? onCurrentLessonTap;
+  final LearningSnapshot snapshot;
+  final ValueChanged<LearningLesson> onLessonTap;
+  final String? busyLessonId;
 
   static const _rowHeight = 100.0;
   static const _nodeSize = 54.0;
@@ -80,21 +50,66 @@ class LearningPath extends StatelessWidget {
   static const _indent = 52.0;
   static const _labelGap = 14.0;
 
+  List<_PathRowData> _buildRows() {
+    final rows = <_PathRowData>[];
+
+    for (final unit in snapshot.sortedUnits) {
+      final unitUnlocked = snapshot.isUnitUnlocked(unit);
+
+      if (unit.lessons.isNotEmpty && unitUnlocked) {
+        for (final lesson in unit.sortedLessons) {
+          final unlocked = snapshot.isLessonUnlocked(lesson);
+          final kind = lesson.completed
+              ? _StepKind.completedLesson
+              : unlocked
+              ? _StepKind.currentLesson
+              : _StepKind.lockedLesson;
+
+          rows.add(
+            _PathRowData(
+              kind: kind,
+              kicker: 'LECCIÓN ${lesson.number}',
+              title: lesson.title,
+              subtitle: lesson.completed
+                  ? 'Repasar'
+                  : unlocked
+                  ? '+${lesson.xpReward} XP'
+                  : 'Completa la lección anterior',
+              onTap: lesson.completed || unlocked
+                  ? () => onLessonTap(lesson)
+                  : null,
+              busy: busyLessonId == lesson.id,
+            ),
+          );
+        }
+
+        continue;
+      }
+
+      rows.add(
+        _PathRowData(
+          kind: unitUnlocked ? _StepKind.comingSoonUnit : _StepKind.lockedUnit,
+          kicker: 'UNIDAD ${unit.sortOrder}',
+          title: unit.title,
+          subtitle: unitUnlocked
+              ? 'Próximamente'
+              : 'Completa la unidad anterior',
+        ),
+      );
+    }
+
+    return rows;
+  }
+
   @override
   Widget build(BuildContext context) {
-    final steps = [
-      for (final step in _steps)
-        if (step.kind == _StepKind.currentLesson && lessonCompleted)
-          _PathStep(
-            kind: _StepKind.completedLesson,
-            kicker: step.kicker,
-            title: step.title,
-          )
-        else
-          step,
-    ];
+    final rows = _buildRows();
 
-    final centers = List<Offset>.generate(steps.length, (index) {
+    if (rows.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    final centers = List<Offset>.generate(rows.length, (index) {
       final left = _nodeLeft + (index.isOdd ? _indent : 0);
       return Offset(
         left + _nodeSize / 2,
@@ -103,7 +118,7 @@ class LearningPath extends StatelessWidget {
     });
 
     return SizedBox(
-      height: steps.length * _rowHeight,
+      height: rows.length * _rowHeight,
       child: Stack(
         clipBehavior: Clip.none,
         children: [
@@ -112,14 +127,8 @@ class LearningPath extends StatelessWidget {
               child: CustomPaint(painter: _PathConnectorPainter(centers)),
             ),
           ),
-          for (var index = 0; index < steps.length; index++)
-            _PathRow(
-              index: index,
-              step: steps[index],
-              onTap: steps[index].kind == _StepKind.currentLesson
-                  ? onCurrentLessonTap
-                  : null,
-            ),
+          for (var index = 0; index < rows.length; index++)
+            _PathRow(index: index, step: rows[index], onTap: rows[index].onTap),
         ],
       ),
     );
@@ -130,7 +139,7 @@ class _PathRow extends StatelessWidget {
   const _PathRow({required this.index, required this.step, this.onTap});
 
   final int index;
-  final _PathStep step;
+  final _PathRowData step;
   final VoidCallback? onTap;
 
   @override
@@ -145,6 +154,7 @@ class _PathRow extends StatelessWidget {
           top: LearningPath._nodeTop,
           child: _PathNode(
             kind: step.kind,
+            busy: step.busy,
             label: '${step.kicker} ${step.title}',
           ),
         ),
@@ -185,20 +195,26 @@ class _PathRow extends StatelessWidget {
 }
 
 class _PathNode extends StatelessWidget {
-  const _PathNode({required this.kind, required this.label});
+  const _PathNode({required this.kind, required this.label, this.busy = false});
 
   final _StepKind kind;
   final String label;
+  final bool busy;
 
   static const _size = LearningPath._nodeSize;
 
   @override
   Widget build(BuildContext context) {
-    final isLocked = kind == _StepKind.lockedUnit;
+    final isLocked =
+        kind == _StepKind.lockedUnit ||
+        kind == _StepKind.lockedLesson ||
+        kind == _StepKind.comingSoonUnit;
     final status = switch (kind) {
       _StepKind.completedLesson => 'completada',
       _StepKind.currentLesson => 'actual',
+      _StepKind.lockedLesson => 'bloqueada',
       _StepKind.lockedUnit => 'bloqueada',
+      _StepKind.comingSoonUnit => 'próximamente',
     };
 
     return Semantics(
@@ -207,19 +223,34 @@ class _PathNode extends StatelessWidget {
         width: _size,
         height: _size,
         decoration: _decorationFor(kind),
-        child: Icon(
-          switch (kind) {
-            _StepKind.completedLesson => Icons.check_rounded,
-            _StepKind.currentLesson => Icons.play_arrow_rounded,
-            _StepKind.lockedUnit => Icons.lock_rounded,
-          },
-          color: isLocked ? AppColors.textMuted : Colors.white,
-          size: switch (kind) {
-            _StepKind.completedLesson => 28,
-            _StepKind.currentLesson => 30,
-            _StepKind.lockedUnit => 20,
-          },
-        ),
+        child: busy && kind == _StepKind.currentLesson
+            ? const Center(
+                child: SizedBox(
+                  width: 22,
+                  height: 22,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2.4,
+                    color: Colors.white,
+                  ),
+                ),
+              )
+            : Icon(
+                switch (kind) {
+                  _StepKind.completedLesson => Icons.check_rounded,
+                  _StepKind.currentLesson => Icons.play_arrow_rounded,
+                  _StepKind.lockedLesson => Icons.lock_rounded,
+                  _StepKind.lockedUnit => Icons.lock_rounded,
+                  _StepKind.comingSoonUnit => Icons.schedule_rounded,
+                },
+                color: isLocked ? AppColors.textMuted : Colors.white,
+                size: switch (kind) {
+                  _StepKind.completedLesson => 28,
+                  _StepKind.currentLesson => 30,
+                  _StepKind.lockedLesson => 20,
+                  _StepKind.lockedUnit => 20,
+                  _StepKind.comingSoonUnit => 22,
+                },
+              ),
       ),
     );
   }
@@ -255,7 +286,9 @@ class _PathNode extends StatelessWidget {
             ),
           ],
         );
+      case _StepKind.lockedLesson:
       case _StepKind.lockedUnit:
+      case _StepKind.comingSoonUnit:
         return BoxDecoration(
           color: AppColors.surfaceElevated,
           borderRadius: BorderRadius.circular(17),
@@ -268,7 +301,7 @@ class _PathNode extends StatelessWidget {
 class _PathLabel extends StatelessWidget {
   const _PathLabel({required this.step});
 
-  final _PathStep step;
+  final _PathRowData step;
 
   @override
   Widget build(BuildContext context) {

@@ -5,6 +5,7 @@ import 'app.dart';
 import 'core/auth/supabase_auth_repository.dart';
 import 'core/config/missing_supabase_config_app.dart';
 import 'core/config/supabase_config.dart';
+import 'features/learn/repositories/supabase_learning_repository.dart';
 import 'features/profile/repositories/supabase_profile_repository.dart';
 import 'features/store/repositories/supabase_store_repository.dart';
 
@@ -28,6 +29,7 @@ Future<void> main() async {
   runApp(
     FlowApp(
       authRepository: SupabaseAuthRepository(Supabase.instance.client),
+      learningRepository: SupabaseLearningRepository(Supabase.instance.client),
       profileRepository: SupabaseProfileRepository(Supabase.instance.client),
       storeRepository: SupabaseStoreRepository(Supabase.instance.client),
     ),

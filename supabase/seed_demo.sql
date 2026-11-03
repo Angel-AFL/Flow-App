@@ -1,8 +1,8 @@
 -- Datos de demostración opcionales para FlowApp.
 -- Cambia el correo de abajo por el de tu cuenta y ejecútalo en el SQL Editor.
--- Ejecuta antes las migraciones de perfil y de tienda.
--- No es necesario para que el perfil funcione: solo rellena el perfil con los
--- valores del boceto (1,250 XP, nivel 8, 7 días de racha, 8 lecciones...).
+-- Ejecuta antes las migraciones de perfil, tienda y aprendizaje.
+-- No es necesario para que el perfil funcione: solo rellena el perfil con
+-- datos de demostración coherentes con las 4 lecciones introductorias.
 
 do $$
 declare
@@ -31,11 +31,12 @@ begin
   update public.profiles
   set display_name = 'Estudiante Flow',
       role = 'Aprendiz',
-      xp = 1250,
-      level = 8,
-      next_level_xp = 1500,
+      xp = 200,
+      level = 1,
+      next_level_xp = 500,
       streak_days = 7,
-      lessons_completed = 8,
+      lessons_completed = 4,
+      last_activity_date = current_date,
       coins = 240,
       equipped_skin_code = 'skin_classic',
       equipped_title_code = 'title_novice',
@@ -57,10 +58,19 @@ begin
     update public.profiles set username = 'flowstudent' where id = target_id;
   end if;
 
+  insert into public.lesson_completions (user_id, lesson_id)
+  select target_id, lesson.id
+  from public.lessons lesson
+  where lesson.unit_id = 'unit-1'
+  on conflict do nothing;
+
+  delete from public.user_achievements
+  where user_id = target_id
+    and achievement_code = 'logic_mind';
+
   insert into public.user_achievements (user_id, achievement_code)
   values
     (target_id, 'first_step'),
-    (target_id, 'logic_mind'),
     (target_id, 'consistency')
   on conflict do nothing;
 
