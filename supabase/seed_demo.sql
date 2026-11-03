@@ -1,5 +1,6 @@
 -- Datos de demostración opcionales para FlowApp.
 -- Cambia el correo de abajo por el de tu cuenta y ejecútalo en el SQL Editor.
+-- Ejecuta antes las migraciones de perfil y de tienda.
 -- No es necesario para que el perfil funcione: solo rellena el perfil con los
 -- valores del boceto (1,250 XP, nivel 8, 7 días de racha, 8 lecciones...).
 
@@ -34,8 +35,18 @@ begin
       level = 8,
       next_level_xp = 1500,
       streak_days = 7,
-      lessons_completed = 8
+      lessons_completed = 8,
+      coins = 240,
+      equipped_skin_code = 'skin_classic',
+      equipped_title_code = 'title_novice',
+      streak_freezes = 1
   where id = target_id;
+
+  insert into public.user_inventory (user_id, item_code, quantity)
+  values
+    (target_id, 'skin_classic', 1),
+    (target_id, 'title_novice', 1)
+  on conflict (user_id, item_code) do nothing;
 
   if not exists (
     select 1

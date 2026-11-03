@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../shared/models/diagram_skin.dart';
 import '../../../shared/widgets/diagram_preview.dart';
 import '../models/profile_models.dart';
 
@@ -9,10 +10,12 @@ class ProfileDiagramCard extends StatelessWidget {
     super.key,
     required this.diagram,
     this.previewHeight = 150,
+    this.skin = DiagramSkin.classic,
   });
 
   final ProfileDiagram diagram;
   final double previewHeight;
+  final DiagramSkin skin;
 
   @override
   Widget build(BuildContext context) {
@@ -26,7 +29,11 @@ class ProfileDiagramCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          DiagramPreview(diagram: diagram.diagram, height: previewHeight),
+          DiagramPreview(
+            diagram: diagram.diagram,
+            height: previewHeight,
+            skin: skin,
+          ),
           const SizedBox(height: 8),
           Text(
             diagram.title,

@@ -5,6 +5,7 @@ import 'package:flow_app/app.dart';
 
 import 'helpers/fake_auth_repository.dart';
 import 'helpers/fake_profile_repository.dart';
+import 'helpers/fake_store_repository.dart';
 
 void main() {
   Future<void> pumpWelcome(
@@ -20,6 +21,7 @@ void main() {
       FlowApp(
         authRepository: FakeAuthRepository(user: demoUser),
         profileRepository: FakeProfileRepository(),
+        storeRepository: FakeStoreRepository(),
       ),
     );
   }

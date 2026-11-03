@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../shared/utils/formatters.dart';
 import '../../../shared/widgets/flow_logo.dart';
 
 class HomeHeader extends StatelessWidget {
-  const HomeHeader({super.key});
+  const HomeHeader({super.key, required this.coins});
+
+  final int coins;
 
   @override
   Widget build(BuildContext context) {
@@ -52,10 +55,10 @@ class HomeHeader extends StatelessWidget {
                   value: '7',
                 ),
                 const SizedBox(width: 6),
-                const _MetricChip(
+                _MetricChip(
                   icon: Icons.monetization_on_rounded,
                   iconColor: AppColors.gold,
-                  value: '240',
+                  value: formatThousands(coins),
                 ),
               ],
             ),

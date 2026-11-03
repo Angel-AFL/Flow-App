@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/auth/auth_repository.dart';
 import '../../features/profile/repositories/profile_repository.dart';
+import '../../features/store/repositories/store_repository.dart';
 import '../../features/welcome/welcome_screen.dart';
 import '../navigation/app_shell.dart';
 
@@ -12,10 +13,12 @@ class AuthGate extends StatefulWidget {
     super.key,
     required this.authRepository,
     required this.profileRepository,
+    required this.storeRepository,
   });
 
   final AuthRepository authRepository;
   final ProfileRepository profileRepository;
+  final StoreRepository storeRepository;
 
   @override
   State<AuthGate> createState() => _AuthGateState();
@@ -54,6 +57,7 @@ class _AuthGateState extends State<AuthGate> {
     return AppShell(
       user: user,
       profileRepository: widget.profileRepository,
+      storeRepository: widget.storeRepository,
       onSignOut: widget.authRepository.signOut,
     );
   }

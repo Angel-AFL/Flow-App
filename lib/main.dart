@@ -6,6 +6,7 @@ import 'core/auth/supabase_auth_repository.dart';
 import 'core/config/missing_supabase_config_app.dart';
 import 'core/config/supabase_config.dart';
 import 'features/profile/repositories/supabase_profile_repository.dart';
+import 'features/store/repositories/supabase_store_repository.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -28,6 +29,7 @@ Future<void> main() async {
     FlowApp(
       authRepository: SupabaseAuthRepository(Supabase.instance.client),
       profileRepository: SupabaseProfileRepository(Supabase.instance.client),
+      storeRepository: SupabaseStoreRepository(Supabase.instance.client),
     ),
   );
 }

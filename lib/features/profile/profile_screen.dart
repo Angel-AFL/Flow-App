@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../../shared/models/diagram_skin.dart';
 import '../../shared/utils/formatters.dart';
 import '../../shared/widgets/stat_card.dart';
 import 'models/profile_models.dart';
@@ -23,6 +24,7 @@ class ProfileScreen extends StatefulWidget {
     required this.repository,
     required this.onSignOut,
     this.pickImage,
+    this.refreshToken = 0,
   });
 
   final String userId;
@@ -30,6 +32,7 @@ class ProfileScreen extends StatefulWidget {
   final ProfileRepository repository;
   final Future<void> Function() onSignOut;
   final PickProfileImage? pickImage;
+  final int refreshToken;
 
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
@@ -46,6 +49,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
   void initState() {
     super.initState();
     _load();
+  }
+
+  @override
+  void didUpdateWidget(covariant ProfileScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    if (widget.refreshToken != oldWidget.refreshToken) {
+      _load(showLoading: false);
+    }
   }
 
   Future<void> _load({bool showLoading = true}) async {
@@ -240,11 +252,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   void _openDiagrams() {
-    final diagrams = _snapshot?.diagrams ?? const <ProfileDiagram>[];
+    final snapshot = _snapshot;
+    final diagrams = snapshot?.diagrams ?? const <ProfileDiagram>[];
+    final skin = snapshot?.profile.equippedSkin ?? DiagramSkin.classic;
 
     Navigator.of(context).push(
       MaterialPageRoute<void>(
-        builder: (_) => MyDiagramsScreen(diagrams: diagrams),
+        builder: (_) => MyDiagramsScreen(diagrams: diagrams, skin: skin),
       ),
     );
   }
@@ -353,6 +367,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   const SizedBox(height: 22),
                   DiagramGallery(
                     diagrams: snapshot.diagrams,
+                    skin: snapshot.profile.equippedSkin,
                     onViewAll: _openDiagrams,
                   ),
                   const SizedBox(height: 14),
