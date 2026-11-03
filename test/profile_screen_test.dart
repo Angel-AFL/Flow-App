@@ -5,6 +5,7 @@ import 'package:flow_app/app.dart';
 import 'package:flow_app/features/profile/my_diagrams_screen.dart';
 
 import 'helpers/fake_auth_repository.dart';
+import 'helpers/fake_learning_repository.dart';
 import 'helpers/fake_profile_repository.dart';
 import 'helpers/fake_store_repository.dart';
 
@@ -23,6 +24,7 @@ void main() {
     await tester.pumpWidget(
       FlowApp(
         authRepository: authRepository,
+        learningRepository: FakeLearningRepository(),
         profileRepository: FakeProfileRepository(),
         storeRepository: FakeStoreRepository(),
       ),
@@ -38,7 +40,7 @@ void main() {
 
     expect(find.text('Estudiante Flow'), findsOneWidget);
     expect(find.text('estudiante@flow.app'), findsOneWidget);
-    expect(find.text('Nivel 8'), findsOneWidget);
+    expect(find.text('Nivel 3'), findsOneWidget);
     expect(find.text('1,250 / 1,500 XP'), findsOneWidget);
     expect(find.text('1,250'), findsOneWidget);
     expect(find.text('7'), findsOneWidget);
