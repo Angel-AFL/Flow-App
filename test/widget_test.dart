@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:flow_app/app.dart';
 
 import 'helpers/fake_auth_repository.dart';
+import 'helpers/fake_profile_repository.dart';
 
 void main() {
   Future<void> pumpWelcome(
@@ -16,7 +17,10 @@ void main() {
     addTearDown(tester.view.resetDevicePixelRatio);
 
     await tester.pumpWidget(
-      FlowApp(authRepository: FakeAuthRepository(user: demoUser)),
+      FlowApp(
+        authRepository: FakeAuthRepository(user: demoUser),
+        profileRepository: FakeProfileRepository(),
+      ),
     );
   }
 

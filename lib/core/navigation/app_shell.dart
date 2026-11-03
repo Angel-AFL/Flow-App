@@ -5,15 +5,22 @@ import '../../features/community/community_screen.dart';
 import '../../features/home/home_screen.dart';
 import '../../features/learn/learn_screen.dart';
 import '../../features/profile/profile_screen.dart';
+import '../../features/profile/repositories/profile_repository.dart';
 import '../../features/store/store_screen.dart';
 import '../../shared/widgets/flow_background.dart';
 import '../../shared/widgets/flow_bottom_nav.dart';
 import '../theme/app_colors.dart';
 
 class AppShell extends StatefulWidget {
-  const AppShell({super.key, required this.user, required this.onSignOut});
+  const AppShell({
+    super.key,
+    required this.user,
+    required this.profileRepository,
+    required this.onSignOut,
+  });
 
   final AppUser user;
+  final ProfileRepository profileRepository;
   final Future<void> Function() onSignOut;
 
   @override
@@ -28,7 +35,12 @@ class _AppShellState extends State<AppShell> {
     const LearnScreen(),
     const CommunityScreen(),
     const StoreScreen(),
-    ProfileScreen(userEmail: widget.user.email, onSignOut: widget.onSignOut),
+    ProfileScreen(
+      userId: widget.user.id,
+      userEmail: widget.user.email,
+      repository: widget.profileRepository,
+      onSignOut: widget.onSignOut,
+    ),
   ];
 
   @override
