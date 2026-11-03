@@ -6,9 +6,10 @@ import 'models/diagram_lesson.dart';
 import 'widgets/lesson_diagram_builder.dart';
 
 class LessonScreen extends StatefulWidget {
-  const LessonScreen({super.key, required this.lesson});
+  const LessonScreen({super.key, required this.lesson, this.isReview = false});
 
   final DiagramLesson lesson;
+  final bool isReview;
 
   @override
   State<LessonScreen> createState() => _LessonScreenState();
@@ -134,7 +135,11 @@ class _LessonScreenState extends State<LessonScreen> {
               children: [
                 Padding(
                   padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
-                  child: _LessonHeader(lesson: widget.lesson, onBack: _close),
+                  child: _LessonHeader(
+                    lesson: widget.lesson,
+                    isReview: widget.isReview,
+                    onBack: _close,
+                  ),
                 ),
                 Expanded(
                   child: SingleChildScrollView(
@@ -178,6 +183,10 @@ class _LessonScreenState extends State<LessonScreen> {
                                 height: 1.45,
                               ),
                             ),
+                            if (widget.lesson.concept.isNotEmpty) ...[
+                              const SizedBox(height: 16),
+                              _ConceptPanel(concept: widget.lesson.concept),
+                            ],
                             const SizedBox(height: 18),
                             LessonDiagramBuilder(
                               lesson: widget.lesson,
@@ -195,6 +204,7 @@ class _LessonScreenState extends State<LessonScreen> {
                             if (_approved)
                               _SuccessPanel(
                                 lesson: widget.lesson,
+                                isReview: widget.isReview,
                                 onContinue: () =>
                                     Navigator.of(context).pop(true),
                               )
@@ -258,9 +268,14 @@ class _LessonScreenState extends State<LessonScreen> {
 }
 
 class _LessonHeader extends StatelessWidget {
-  const _LessonHeader({required this.lesson, required this.onBack});
+  const _LessonHeader({
+    required this.lesson,
+    required this.isReview,
+    required this.onBack,
+  });
 
   final DiagramLesson lesson;
+  final bool isReview;
   final VoidCallback onBack;
 
   @override
@@ -315,14 +330,19 @@ class _LessonHeader extends StatelessWidget {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
           decoration: BoxDecoration(
-            color: AppColors.gold.withValues(alpha: 0.12),
+            color: (isReview ? AppColors.secondary : AppColors.gold).withValues(
+              alpha: 0.12,
+            ),
             borderRadius: BorderRadius.circular(999),
-            border: Border.all(color: AppColors.gold.withValues(alpha: 0.45)),
+            border: Border.all(
+              color: (isReview ? AppColors.secondary : AppColors.gold)
+                  .withValues(alpha: 0.45),
+            ),
           ),
           child: Text(
-            '${lesson.xpReward} XP',
-            style: const TextStyle(
-              color: AppColors.gold,
+            isReview ? 'REPASO' : '${lesson.xpReward} XP',
+            style: TextStyle(
+              color: isReview ? AppColors.secondary : AppColors.gold,
               fontSize: 10.5,
               fontWeight: FontWeight.w700,
             ),
@@ -372,9 +392,14 @@ class _ErrorPanel extends StatelessWidget {
 }
 
 class _SuccessPanel extends StatelessWidget {
-  const _SuccessPanel({required this.lesson, required this.onContinue});
+  const _SuccessPanel({
+    required this.lesson,
+    required this.isReview,
+    required this.onContinue,
+  });
 
   final DiagramLesson lesson;
+  final bool isReview;
   final VoidCallback onContinue;
 
   @override
@@ -406,10 +431,10 @@ class _SuccessPanel extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 12),
-          const Text(
-            '¡Diagrama aprobado!',
+          Text(
+            isReview ? '¡Repaso completado!' : '¡Diagrama aprobado!',
             textAlign: TextAlign.center,
-            style: TextStyle(
+            style: const TextStyle(
               color: AppColors.textPrimary,
               fontSize: 20,
               fontWeight: FontWeight.w800,
@@ -417,7 +442,9 @@ class _SuccessPanel extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           Text(
-            'Completaste la lección ${lesson.number}.',
+            isReview
+                ? 'Practicaste la lección ${lesson.number}.'
+                : 'Completaste la lección ${lesson.number}.',
             textAlign: TextAlign.center,
             style: const TextStyle(
               color: AppColors.textSecondary,
@@ -426,56 +453,68 @@ class _SuccessPanel extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 10),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            alignment: WrapAlignment.center,
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 6,
-                ),
-                decoration: BoxDecoration(
-                  color: AppColors.gold.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(999),
-                  border: Border.all(
-                    color: AppColors.gold.withValues(alpha: 0.45),
-                  ),
-                ),
-                child: Text(
-                  '+${lesson.xpReward} XP',
-                  style: const TextStyle(
-                    color: AppColors.gold,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
+          if (isReview)
+            const Text(
+              'Esta lección ya estaba completada. No hay recompensa adicional.',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: AppColors.textMuted,
+                fontSize: 11,
+                fontWeight: FontWeight.w500,
+                height: 1.35,
               ),
-              if (lesson.coinReward > 0)
+            )
+          else
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              alignment: WrapAlignment.center,
+              children: [
                 Container(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 12,
                     vertical: 6,
                   ),
                   decoration: BoxDecoration(
-                    color: AppColors.secondary.withValues(alpha: 0.12),
+                    color: AppColors.gold.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(999),
                     border: Border.all(
-                      color: AppColors.secondary.withValues(alpha: 0.45),
+                      color: AppColors.gold.withValues(alpha: 0.45),
                     ),
                   ),
                   child: Text(
-                    '+${lesson.coinReward} monedas',
+                    '+${lesson.xpReward} XP',
                     style: const TextStyle(
-                      color: AppColors.secondary,
+                      color: AppColors.gold,
                       fontSize: 12,
                       fontWeight: FontWeight.w800,
                     ),
                   ),
                 ),
-            ],
-          ),
+                if (lesson.coinReward > 0)
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.secondary.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(999),
+                      border: Border.all(
+                        color: AppColors.secondary.withValues(alpha: 0.45),
+                      ),
+                    ),
+                    child: Text(
+                      '+${lesson.coinReward} monedas',
+                      style: const TextStyle(
+                        color: AppColors.secondary,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
           const SizedBox(height: 16),
           SizedBox(
             width: double.infinity,
@@ -494,6 +533,58 @@ class _SuccessPanel extends StatelessWidget {
                 ),
               ),
               child: const Text('Volver a la ruta'),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ConceptPanel extends StatelessWidget {
+  const _ConceptPanel({required this.concept});
+
+  final String concept;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: AppColors.border.withValues(alpha: 0.7)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Row(
+            children: [
+              Icon(
+                Icons.lightbulb_outline_rounded,
+                size: 15,
+                color: AppColors.secondary,
+              ),
+              SizedBox(width: 7),
+              Text(
+                'CONCEPTO',
+                style: TextStyle(
+                  color: AppColors.secondary,
+                  fontSize: 9.5,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 1.1,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            concept,
+            style: const TextStyle(
+              color: AppColors.textSecondary,
+              fontSize: 12.5,
+              fontWeight: FontWeight.w400,
+              height: 1.45,
             ),
           ),
         ],

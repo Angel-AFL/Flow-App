@@ -4,6 +4,7 @@ import '../../core/auth/auth_repository.dart';
 import '../../features/community/community_screen.dart';
 import '../../features/home/home_screen.dart';
 import '../../features/learn/learn_screen.dart';
+import '../../features/learn/repositories/learning_repository.dart';
 import '../../features/profile/profile_screen.dart';
 import '../../features/profile/repositories/profile_repository.dart';
 import '../../features/store/controllers/wallet_controller.dart';
@@ -17,12 +18,14 @@ class AppShell extends StatefulWidget {
   const AppShell({
     super.key,
     required this.user,
+    required this.learningRepository,
     required this.profileRepository,
     required this.storeRepository,
     required this.onSignOut,
   });
 
   final AppUser user;
+  final LearningRepository learningRepository;
   final ProfileRepository profileRepository;
   final StoreRepository storeRepository;
   final Future<void> Function() onSignOut;
@@ -57,7 +60,7 @@ class _AppShellState extends State<AppShell> {
     HomeScreen(wallet: _wallet),
     LearnScreen(
       userId: widget.user.id,
-      repository: widget.storeRepository,
+      repository: widget.learningRepository,
       wallet: _wallet,
     ),
     const CommunityScreen(),

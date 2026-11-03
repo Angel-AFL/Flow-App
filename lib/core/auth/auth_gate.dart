@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../../core/auth/auth_repository.dart';
+import '../../features/learn/repositories/learning_repository.dart';
 import '../../features/profile/repositories/profile_repository.dart';
 import '../../features/store/repositories/store_repository.dart';
 import '../../features/welcome/welcome_screen.dart';
@@ -12,11 +13,13 @@ class AuthGate extends StatefulWidget {
   const AuthGate({
     super.key,
     required this.authRepository,
+    required this.learningRepository,
     required this.profileRepository,
     required this.storeRepository,
   });
 
   final AuthRepository authRepository;
+  final LearningRepository learningRepository;
   final ProfileRepository profileRepository;
   final StoreRepository storeRepository;
 
@@ -56,6 +59,7 @@ class _AuthGateState extends State<AuthGate> {
 
     return AppShell(
       user: user,
+      learningRepository: widget.learningRepository,
       profileRepository: widget.profileRepository,
       storeRepository: widget.storeRepository,
       onSignOut: widget.authRepository.signOut,

@@ -7,11 +7,15 @@ import '../../../core/theme/app_colors.dart';
 class UnitSummaryCard extends StatelessWidget {
   const UnitSummaryCard({
     super.key,
+    this.kicker = 'UNIDAD 1',
+    this.title = 'Diagramas lineales',
     this.progress = 0.67,
     this.completedLessons = 2,
     this.totalLessons = 3,
   });
 
+  final String kicker;
+  final String title;
   final double progress;
   final int completedLessons;
   final int totalLessons;
@@ -19,6 +23,9 @@ class UnitSummaryCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final percentage = (progress * 100).round();
+    final subtitle = totalLessons == 0
+        ? 'Próximamente'
+        : '$completedLessons de $totalLessons lecciones';
 
     return Container(
       padding: const EdgeInsets.fromLTRB(18, 16, 18, 16),
@@ -33,9 +40,9 @@ class UnitSummaryCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'UNIDAD 1',
-                  style: TextStyle(
+                Text(
+                  kicker,
+                  style: const TextStyle(
                     color: AppColors.secondary,
                     fontSize: 9.5,
                     fontWeight: FontWeight.w700,
@@ -43,11 +50,11 @@ class UnitSummaryCard extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 7),
-                const Text(
-                  'Diagramas lineales',
+                Text(
+                  title,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
+                  style: const TextStyle(
                     color: AppColors.textPrimary,
                     fontSize: 20,
                     fontWeight: FontWeight.w800,
@@ -56,7 +63,7 @@ class UnitSummaryCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 5),
                 Text(
-                  '$completedLessons de $totalLessons lecciones',
+                  subtitle,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
@@ -70,7 +77,7 @@ class UnitSummaryCard extends StatelessWidget {
           ),
           const SizedBox(width: 14),
           Semantics(
-            label: 'Progreso de la unidad 1: $percentage por ciento',
+            label: 'Progreso de $kicker: $percentage por ciento',
             child: SizedBox(
               width: 62,
               height: 62,
@@ -126,7 +133,7 @@ class _UnitRingPainter extends CustomPainter {
     canvas.drawArc(
       arcRect,
       -math.pi / 2,
-      2 * math.pi * progress,
+      2 * math.pi * progress.clamp(0.0, 1.0),
       false,
       progressPaint,
     );

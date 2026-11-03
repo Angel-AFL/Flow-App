@@ -4,27 +4,29 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:flow_app/app.dart';
 
 import 'helpers/fake_auth_repository.dart';
+import 'helpers/fake_learning_repository.dart';
 import 'helpers/fake_profile_repository.dart';
 import 'helpers/fake_store_repository.dart';
 
 void main() {
-  Future<FakeStoreRepository> pumpLesson(
+  Future<FakeLearningRepository> pumpLesson(
     WidgetTester tester, {
     Size size = const Size(390, 844),
-    FakeStoreRepository? storeRepository,
+    FakeLearningRepository? learningRepository,
   }) async {
     tester.view.physicalSize = size;
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
 
-    final store = storeRepository ?? FakeStoreRepository();
+    final learning = learningRepository ?? FakeLearningRepository();
 
     await tester.pumpWidget(
       FlowApp(
         authRepository: FakeAuthRepository(user: demoUser),
+        learningRepository: learning,
         profileRepository: FakeProfileRepository(),
-        storeRepository: store,
+        storeRepository: FakeStoreRepository(),
       ),
     );
     await tester.tap(find.text('Aprender'));
@@ -33,12 +35,17 @@ void main() {
     await tester.tap(find.text('Tu primer diagrama'));
     await tester.pumpAndSettle();
 
-    return store;
+    return learning;
   }
 
-  Future<void> placeInOrder(WidgetTester tester) async {
-    for (final label in ['Inicio', 'Mostrar mensaje', 'Fin']) {
-      await tester.tap(find.text(label));
+  Future<void> placeInOrder(
+    WidgetTester tester, {
+    List<String> labels = const ['Inicio', 'Mostrar mensaje', 'Fin'],
+  }) async {
+    for (final label in labels) {
+      final target = find.text(label);
+      await tester.ensureVisible(target);
+      await tester.tap(target);
       await tester.pump();
     }
   }
@@ -47,6 +54,7 @@ void main() {
     await pumpLesson(tester);
 
     expect(find.text('LECCIÓN 3'), findsOneWidget);
+    expect(find.text('CONCEPTO'), findsOneWidget);
     expect(find.text('Espacio 1'), findsOneWidget);
     expect(find.text('Espacio 2'), findsOneWidget);
     expect(find.text('Espacio 3'), findsOneWidget);
@@ -57,7 +65,7 @@ void main() {
   testWidgets('aprueba el diagrama en orden y actualiza el progreso', (
     tester,
   ) async {
-    final store = await pumpLesson(tester);
+    final learning = await pumpLesson(tester);
 
     await placeInOrder(tester);
     await tester.ensureVisible(find.text('Aprobar diagrama'));
@@ -73,14 +81,56 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Ruta de aprendizaje'), findsOneWidget);
-    expect(find.text('3 de 3 lecciones'), findsOneWidget);
-    expect(find.text('100%'), findsOneWidget);
-    expect(store.lastLessonId, 'unit-1-lesson-3');
-    expect(store.snapshot.coins, 265);
+    expect(find.text('3 de 4 lecciones'), findsOneWidget);
+    expect(find.text('75%'), findsOneWidget);
+    expect(learning.lastLessonId, 'unit-1-lesson-3');
+    expect(learning.coins, 265);
     expect(
-      find.textContaining('Recompensa: +25 monedas y +50 XP'),
+      find.textContaining('Recompensa: +50 XP y +25 monedas'),
       findsOneWidget,
     );
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('permite repasar una lección completada sin recompensa', (
+    tester,
+  ) async {
+    final learning = FakeLearningRepository();
+
+    await tester.pumpWidget(
+      FlowApp(
+        authRepository: FakeAuthRepository(user: demoUser),
+        learningRepository: learning,
+        profileRepository: FakeProfileRepository(),
+        storeRepository: FakeStoreRepository(),
+      ),
+    );
+    await tester.tap(find.text('Aprender'));
+    await tester.pumpAndSettle();
+
+    final reviewLesson = find.text('¿Qué es un diagrama de flujo?');
+    await tester.ensureVisible(reviewLesson);
+    await tester.tap(reviewLesson);
+    await tester.pumpAndSettle();
+
+    expect(find.text('REPASO'), findsOneWidget);
+
+    await placeInOrder(tester, labels: const ['Inicio', 'Mostrar Hola', 'Fin']);
+    await tester.ensureVisible(find.text('Aprobar diagrama'));
+    await tester.tap(find.text('Aprobar diagrama'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('¡Repaso completado!'), findsOneWidget);
+    expect(find.textContaining('No hay recompensa adicional'), findsOneWidget);
+
+    await tester.ensureVisible(find.text('Volver a la ruta'));
+    await tester.tap(find.text('Volver a la ruta'));
+    await tester.pumpAndSettle();
+
+    expect(learning.lastLessonId, 'unit-1-lesson-1');
+    expect(learning.coins, 240);
+    expect(learning.snapshot.completedLessons, 2);
+    expect(find.textContaining('Repaso guardado'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
@@ -122,11 +172,14 @@ void main() {
   testWidgets('permite quitar un bloque colocado', (tester) async {
     await pumpLesson(tester);
 
-    await tester.tap(find.text('Inicio'));
+    final start = find.text('Inicio');
+    await tester.ensureVisible(start);
+    await tester.tap(start);
     await tester.pump();
     expect(find.text('Espacio 1'), findsNothing);
 
-    await tester.tap(find.text('Inicio'));
+    await tester.ensureVisible(start);
+    await tester.tap(start);
     await tester.pump();
 
     expect(find.text('Espacio 1'), findsOneWidget);

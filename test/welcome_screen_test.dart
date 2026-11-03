@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:flow_app/app.dart';
 
 import 'helpers/fake_auth_repository.dart';
+import 'helpers/fake_learning_repository.dart';
 import 'helpers/fake_profile_repository.dart';
 import 'helpers/fake_store_repository.dart';
 
@@ -22,6 +23,7 @@ void main() {
     await tester.pumpWidget(
       FlowApp(
         authRepository: authRepository,
+        learningRepository: FakeLearningRepository(),
         profileRepository: FakeProfileRepository(),
         storeRepository: FakeStoreRepository(),
       ),

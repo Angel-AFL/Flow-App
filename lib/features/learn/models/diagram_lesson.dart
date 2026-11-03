@@ -17,6 +17,7 @@ class DiagramLesson {
     required this.id,
     required this.number,
     required this.title,
+    this.concept = '',
     required this.instructions,
     required this.xpReward,
     this.coinReward = 0,
@@ -26,6 +27,7 @@ class DiagramLesson {
   final String id;
   final int number;
   final String title;
+  final String concept;
   final String instructions;
   final int xpReward;
   final int coinReward;
@@ -47,23 +49,3 @@ class DiagramLesson {
 
   List<DiagramBlock> get trayBlocks => blocks.reversed.toList();
 }
-
-const firstDiagramLesson = DiagramLesson(
-  id: 'unit-1-lesson-3',
-  number: 3,
-  title: 'Tu primer diagrama',
-  instructions:
-      'Toca los bloques para colocarlos en el diagrama. Todo flujo empieza '
-      'en Inicio y termina en Fin.',
-  xpReward: 50,
-  coinReward: 25,
-  blocks: [
-    DiagramBlock(id: 'start', kind: DiagramBlockKind.start, label: 'Inicio'),
-    DiagramBlock(
-      id: 'process',
-      kind: DiagramBlockKind.process,
-      label: 'Mostrar mensaje',
-    ),
-    DiagramBlock(id: 'end', kind: DiagramBlockKind.end, label: 'Fin'),
-  ],
-);
