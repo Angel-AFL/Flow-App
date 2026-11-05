@@ -321,8 +321,8 @@ begin
   end if;
 
   if v_item.category <> 'consumable' and exists (
-    select 1 from public.user_inventory
-    where user_id = v_user and item_code = p_item_code
+    select 1 from public.user_inventory inv
+    where inv.user_id = v_user and inv.item_code = p_item_code
   ) then
     raise exception 'already_owned' using errcode = 'P0001';
   end if;
@@ -336,7 +336,7 @@ begin
   values (v_user, p_item_code, 1)
   on conflict (user_id, item_code) do update
     set quantity = inventory.quantity + 1
-  returning quantity into v_quantity;
+  returning inventory.quantity into v_quantity;
 
   insert into public.store_purchases (user_id, item_code, price_paid)
   values (v_user, p_item_code, v_item.price);
