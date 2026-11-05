@@ -9,6 +9,7 @@ language plpgsql
 security definer
 set search_path = public
 as $$
+#variable_conflict use_column
 declare
   v_user uuid := auth.uid();
   v_item public.store_items%rowtype;
