@@ -328,6 +328,21 @@ class SupabaseStoreRepository implements StoreRepository {
     required String fallback,
   }) {
     final message = error.message;
+    final code = error.code;
+
+    if (code == 'PGRST202') {
+      return const StoreFailure(
+        'La tienda no está configurada en el servidor. Actualiza la base de datos.',
+        code: 'PGRST202',
+      );
+    }
+
+    if (code == '42501') {
+      return const StoreFailure(
+        'Tu cuenta no tiene permisos para realizar esta acción.',
+        code: '42501',
+      );
+    }
 
     if (message.contains('insufficient_coins')) {
       return const StoreFailure('No tienes suficientes monedas Flow.');
@@ -359,6 +374,6 @@ class SupabaseStoreRepository implements StoreRepository {
       );
     }
 
-    return StoreFailure(fallback);
+    return StoreFailure(fallback, code: code);
   }
 }
