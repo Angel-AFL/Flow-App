@@ -31,8 +31,30 @@ void main() {
     final snapshot = initial.copyWith(units: units);
 
     expect(snapshot.completedLessons, 4);
-    expect(snapshot.currentLesson, isNull);
+    expect(snapshot.currentLesson?.id, 'unit-2-lesson-1');
     expect(snapshot.isUnitUnlocked(snapshot.units[1]), isTrue);
+  });
+
+  test('desbloquea las unidades nuevas en cadena', () {
+    final snapshot = demoFreshLearningSnapshot();
+    final units = snapshot.units
+        .map(
+          (unit) => unit.id == 'unit-1' || unit.id == 'unit-2'
+              ? unit.copyWith(
+                  lessons: unit.lessons
+                      .map((lesson) => lesson.copyWith(completed: true))
+                      .toList(),
+                )
+              : unit,
+        )
+        .toList();
+
+    final progressed = snapshot.copyWith(units: units);
+
+    expect(progressed.currentUnit?.id, 'unit-3');
+    expect(progressed.currentLesson?.id, 'unit-3-lesson-1');
+    expect(progressed.isUnitUnlocked(progressed.units[2]), isTrue);
+    expect(progressed.isUnitUnlocked(progressed.units[3]), isFalse);
   });
 
   test('ordena unidades y lecciones aunque lleguen al revés', () {

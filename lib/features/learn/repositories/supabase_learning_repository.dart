@@ -51,9 +51,17 @@ class SupabaseLearningRepository implements LearningRepository {
       for (final row in lessonRows) {
         final id = row['id'] as String;
         final unitId = row['unit_id'] as String;
-        final blocks = _blocksFrom(row['content']);
+        final content = _contentMap(row['content']);
+        final exercise = _exerciseFrom(content['exercise']);
+        final blocks = _blocksFrom(content);
 
-        if (blocks.isEmpty) {
+        if (exercise == LessonExerciseKind.order && blocks.isEmpty) {
+          continue;
+        }
+
+        final options = _optionsFrom(content['options']);
+
+        if (exercise != LessonExerciseKind.order && options.isEmpty) {
           continue;
         }
 
@@ -74,6 +82,12 @@ class SupabaseLearningRepository implements LearningRepository {
                 blocks: blocks,
                 sortOrder: (row['sort_order'] as num?)?.toInt() ?? 0,
                 completed: completedIds.contains(id),
+                exercise: exercise,
+                question: content['question'] as String? ?? '',
+                options: options,
+                correctOptionId: content['correct'] as String?,
+                explanation: content['explanation'] as String? ?? '',
+                snippet: content['snippet'] as String?,
               ),
             );
       }
@@ -141,11 +155,48 @@ class SupabaseLearningRepository implements LearningRepository {
     }
   }
 
-  static List<DiagramBlock> _blocksFrom(dynamic content) {
-    if (content is! Map) {
+  static Map<String, dynamic> _contentMap(dynamic value) {
+    if (value is! Map) {
+      return const {};
+    }
+
+    return value.cast<String, dynamic>();
+  }
+
+  static LessonExerciseKind _exerciseFrom(dynamic value) {
+    return switch (value) {
+      'choice' => LessonExerciseKind.choice,
+      'trace' => LessonExerciseKind.trace,
+      _ => LessonExerciseKind.order,
+    };
+  }
+
+  static List<LessonOption> _optionsFrom(dynamic value) {
+    if (value is! List) {
       return const [];
     }
 
+    final options = <LessonOption>[];
+
+    for (final raw in value) {
+      if (raw is! Map) {
+        continue;
+      }
+
+      final id = raw['id'];
+      final label = raw['label'];
+
+      if (id is! String || label is! String) {
+        continue;
+      }
+
+      options.add(LessonOption(id: id, label: label));
+    }
+
+    return options;
+  }
+
+  static List<DiagramBlock> _blocksFrom(Map<String, dynamic> content) {
     final rawBlocks = content['blocks'];
 
     if (rawBlocks is! List) {
@@ -167,7 +218,13 @@ class SupabaseLearningRepository implements LearningRepository {
       }
 
       blocks.add(
-        DiagramBlock(id: id, kind: _kindFrom(raw['kind']), label: label),
+        DiagramBlock(
+          id: id,
+          kind: _kindFrom(raw['kind']),
+          label: label,
+          yesLabel: raw['yesLabel'] as String?,
+          noLabel: raw['noLabel'] as String?,
+        ),
       );
     }
 
@@ -177,6 +234,7 @@ class SupabaseLearningRepository implements LearningRepository {
   static DiagramBlockKind _kindFrom(dynamic value) {
     return switch (value) {
       'start' => DiagramBlockKind.start,
+      'decision' => DiagramBlockKind.decision,
       'end' => DiagramBlockKind.end,
       _ => DiagramBlockKind.process,
     };
@@ -214,6 +272,12 @@ class SupabaseLearningRepository implements LearningRepository {
     if (message.contains('lesson_locked')) {
       return const LearningFailure(
         'Completa la lección anterior para desbloquear esta.',
+      );
+    }
+
+    if (message.contains('unit_locked')) {
+      return const LearningFailure(
+        'Completa la unidad anterior para desbloquear esta lección.',
       );
     }
 

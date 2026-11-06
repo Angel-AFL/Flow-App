@@ -13,6 +13,7 @@ void main() {
     WidgetTester tester, {
     Size size = const Size(390, 844),
     FakeLearningRepository? learningRepository,
+    String lessonTitle = 'Tu primer diagrama',
   }) async {
     tester.view.physicalSize = size;
     tester.view.devicePixelRatio = 1.0;
@@ -31,8 +32,9 @@ void main() {
     );
     await tester.tap(find.text('Aprender'));
     await tester.pumpAndSettle();
-    await tester.ensureVisible(find.text('Tu primer diagrama'));
-    await tester.tap(find.text('Tu primer diagrama'));
+    final lesson = find.text(lessonTitle);
+    await tester.ensureVisible(lesson);
+    await tester.tap(lesson);
     await tester.pumpAndSettle();
 
     return learning;
@@ -183,6 +185,103 @@ void main() {
     await tester.pump();
 
     expect(find.text('Espacio 1'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('aprueba una lección de quiz y guarda el progreso', (
+    tester,
+  ) async {
+    final learning = await pumpLesson(
+      tester,
+      learningRepository: FakeLearningRepository(
+        snapshot: demoConditionalsLearningSnapshot(),
+      ),
+      lessonTitle: '¿Qué es una condición?',
+    );
+
+    expect(find.text('TU RESPUESTA'), findsOneWidget);
+    expect(find.text('Comprobar respuesta'), findsOneWidget);
+
+    await tester.ensureVisible(find.text('edad >= 18'));
+    await tester.tap(find.text('edad >= 18'));
+    await tester.pump();
+
+    await tester.ensureVisible(find.text('Comprobar respuesta'));
+    await tester.tap(find.text('Comprobar respuesta'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('¡Diagrama aprobado!'), findsOneWidget);
+    expect(
+      find.text('Una condición compara valores y da verdadero o falso.'),
+      findsOneWidget,
+    );
+
+    await tester.ensureVisible(find.text('Volver a la ruta'));
+    await tester.tap(find.text('Volver a la ruta'));
+    await tester.pumpAndSettle();
+
+    expect(learning.lastLessonId, 'unit-2-lesson-1');
+    expect(learning.coins, 265);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('muestra un mensaje cuando el quiz es incorrecto', (
+    tester,
+  ) async {
+    await pumpLesson(
+      tester,
+      learningRepository: FakeLearningRepository(
+        snapshot: demoConditionalsLearningSnapshot(),
+      ),
+      lessonTitle: '¿Qué es una condición?',
+    );
+
+    await tester.ensureVisible(find.text('Leer edad'));
+    await tester.tap(find.text('Leer edad'));
+    await tester.pump();
+
+    await tester.ensureVisible(find.text('Comprobar respuesta'));
+    await tester.tap(find.text('Comprobar respuesta'));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.text('Casi. Vuelve a leer el concepto y prueba otra opción.'),
+      findsOneWidget,
+    );
+    expect(find.text('¡Diagrama aprobado!'), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('aprueba una lección de traza con pseudocódigo', (tester) async {
+    final learning = await pumpLesson(
+      tester,
+      learningRepository: FakeLearningRepository(
+        snapshot: demoTraceLearningSnapshot(),
+      ),
+      lessonTitle: 'If / Else: elige el camino',
+    );
+
+    expect(find.text('TRAZA EL FLUJO'), findsOneWidget);
+    expect(
+      find.text('edad = 20\nsi edad >= 18:\n  mostrar "Mayor"'),
+      findsOneWidget,
+    );
+
+    await tester.ensureVisible(find.text('Mayor'));
+    await tester.tap(find.text('Mayor'));
+    await tester.pump();
+
+    await tester.ensureVisible(find.text('Comprobar respuesta'));
+    await tester.tap(find.text('Comprobar respuesta'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('¡Diagrama aprobado!'), findsOneWidget);
+
+    await tester.ensureVisible(find.text('Volver a la ruta'));
+    await tester.tap(find.text('Volver a la ruta'));
+    await tester.pumpAndSettle();
+
+    expect(learning.lastLessonId, 'unit-2-lesson-3');
     expect(tester.takeException(), isNull);
   });
 

@@ -13,6 +13,12 @@ class LearningLesson {
     required this.blocks,
     required this.sortOrder,
     required this.completed,
+    this.exercise = LessonExerciseKind.order,
+    this.question = '',
+    this.options = const [],
+    this.correctOptionId,
+    this.explanation = '',
+    this.snippet,
   });
 
   final String id;
@@ -26,6 +32,12 @@ class LearningLesson {
   final List<DiagramBlock> blocks;
   final int sortOrder;
   final bool completed;
+  final LessonExerciseKind exercise;
+  final String question;
+  final List<LessonOption> options;
+  final String? correctOptionId;
+  final String explanation;
+  final String? snippet;
 
   DiagramLesson toDiagramLesson() {
     return DiagramLesson(
@@ -36,7 +48,13 @@ class LearningLesson {
       instructions: instructions,
       xpReward: xpReward,
       coinReward: coinReward,
+      exercise: exercise,
       blocks: blocks,
+      question: question,
+      options: options,
+      correctOptionId: correctOptionId,
+      explanation: explanation,
+      snippet: snippet,
     );
   }
 
@@ -53,6 +71,12 @@ class LearningLesson {
       blocks: blocks,
       sortOrder: sortOrder,
       completed: completed ?? this.completed,
+      exercise: exercise,
+      question: question,
+      options: options,
+      correctOptionId: correctOptionId,
+      explanation: explanation,
+      snippet: snippet,
     );
   }
 }
