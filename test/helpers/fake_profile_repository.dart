@@ -126,17 +126,22 @@ class FakeProfileRepository implements ProfileRepository {
   FakeProfileRepository({
     ProfileSnapshot? snapshot,
     this.loadFailure,
+    this.statsFailure,
     this.updateFailure,
     this.uploadFailure,
+    this.todayActivityCount = 2,
   }) : snapshot = snapshot ?? demoProfileSnapshot();
 
   ProfileSnapshot snapshot;
   ProfileFailure? loadFailure;
+  ProfileFailure? statsFailure;
   ProfileFailure? updateFailure;
   ProfileFailure? uploadFailure;
+  int todayActivityCount;
 
   Completer<ProfileSnapshot>? pendingLoad;
   int loadCalls = 0;
+  int statsCalls = 0;
   ProfileEdit? lastEdit;
   PickedProfileImage? lastAvatar;
 
@@ -155,6 +160,29 @@ class FakeProfileRepository implements ProfileRepository {
     }
 
     return Future.value(snapshot);
+  }
+
+  @override
+  Future<ProfileStats> loadStats(String userId) async {
+    statsCalls++;
+
+    final failure = statsFailure ?? loadFailure;
+    if (failure != null) {
+      throw failure;
+    }
+
+    final profile = snapshot.profile;
+
+    return ProfileStats(
+      displayName: profile.displayName,
+      xp: profile.xp,
+      level: profile.level,
+      nextLevelXp: profile.nextLevelXp,
+      streakDays: profile.streakDays,
+      lessonsCompleted: profile.lessonsCompleted,
+      lastActivityDate: profile.lastActivityDate,
+      todayActivityCount: todayActivityCount,
+    );
   }
 
   @override

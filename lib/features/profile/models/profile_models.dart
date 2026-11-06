@@ -56,24 +56,8 @@ class UserProfile {
     return ((xp - levelStart) / span).clamp(0.0, 1.0);
   }
 
-  int get effectiveStreakDays {
-    final last = lastActivityDate;
-
-    if (last == null) {
-      return 0;
-    }
-
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-    final lastDay = DateTime(last.year, last.month, last.day);
-    final difference = today.difference(lastDay).inDays;
-
-    if (difference < 0 || difference > 1) {
-      return 0;
-    }
-
-    return streakDays;
-  }
+  int get effectiveStreakDays =>
+      calculateEffectiveStreak(lastActivityDate, streakDays);
 
   String get initials {
     final words = displayName
@@ -128,6 +112,56 @@ class UserProfile {
       equippedTitle: equippedTitle ?? this.equippedTitle,
     );
   }
+}
+
+class ProfileStats {
+  const ProfileStats({
+    required this.displayName,
+    required this.xp,
+    required this.level,
+    required this.nextLevelXp,
+    required this.streakDays,
+    required this.lessonsCompleted,
+    this.lastActivityDate,
+    this.todayActivityCount = 0,
+  });
+
+  final String displayName;
+  final int xp;
+  final int level;
+  final int nextLevelXp;
+  final int streakDays;
+  final int lessonsCompleted;
+  final DateTime? lastActivityDate;
+  final int todayActivityCount;
+
+  int get effectiveStreakDays =>
+      calculateEffectiveStreak(lastActivityDate, streakDays);
+}
+
+int calculateEffectiveStreak(
+  DateTime? lastActivityDate,
+  int streakDays, {
+  DateTime? now,
+}) {
+  if (lastActivityDate == null) {
+    return 0;
+  }
+
+  final current = now ?? DateTime.now();
+  final today = DateTime(current.year, current.month, current.day);
+  final lastDay = DateTime(
+    lastActivityDate.year,
+    lastActivityDate.month,
+    lastActivityDate.day,
+  );
+  final difference = today.difference(lastDay).inDays;
+
+  if (difference < 0 || difference > 1) {
+    return 0;
+  }
+
+  return streakDays;
 }
 
 class ProfileAchievement {

@@ -95,6 +95,59 @@ class SupabaseProfileRepository implements ProfileRepository {
   }
 
   @override
+  Future<ProfileStats> loadStats(String userId) async {
+    final today = formatDateKey(DateTime.now());
+
+    try {
+      final results = await Future.wait<dynamic>([
+        _client
+            .from('profiles')
+            .select(
+              'display_name, xp, level, next_level_xp, streak_days, '
+              'last_activity_date, lessons_completed',
+            )
+            .eq('id', userId)
+            .single(),
+        _client
+            .from('daily_activity')
+            .select('activity_count')
+            .eq('user_id', userId)
+            .eq('activity_date', today)
+            .maybeSingle(),
+      ]);
+
+      final row = results[0] as Map<String, dynamic>;
+      final activityRow = results[1] as Map<String, dynamic>?;
+      final displayName = (row['display_name'] as String?)?.trim();
+
+      return ProfileStats(
+        displayName: displayName == null || displayName.isEmpty
+            ? 'Estudiante Flow'
+            : displayName,
+        xp: (row['xp'] as num?)?.toInt() ?? 0,
+        level: (row['level'] as num?)?.toInt() ?? 1,
+        nextLevelXp: (row['next_level_xp'] as num?)?.toInt() ?? 500,
+        streakDays: (row['streak_days'] as num?)?.toInt() ?? 0,
+        lessonsCompleted: (row['lessons_completed'] as num?)?.toInt() ?? 0,
+        lastActivityDate: _dateFrom(row['last_activity_date']),
+        todayActivityCount:
+            (activityRow?['activity_count'] as num?)?.toInt() ?? 0,
+      );
+    } on PostgrestException catch (error) {
+      throw _failureFor(
+        error,
+        fallback: 'No pudimos cargar tu progreso. Inténtalo de nuevo.',
+      );
+    } on AuthException {
+      throw const ProfileFailure('Tu sesión expiró. Vuelve a iniciar sesión.');
+    } catch (_) {
+      throw const ProfileFailure(
+        'No pudimos conectar con el servidor. Revisa tu conexión.',
+      );
+    }
+  }
+
+  @override
   Future<UserProfile> updateProfile({
     required String userId,
     required ProfileEdit edit,
