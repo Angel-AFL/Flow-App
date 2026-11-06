@@ -5,13 +5,24 @@ import 'package:flutter/material.dart';
 import '../../../core/theme/app_colors.dart';
 
 class DailyGoalCard extends StatelessWidget {
-  const DailyGoalCard({super.key});
+  const DailyGoalCard({
+    super.key,
+    required this.completed,
+    this.total = 3,
+  });
 
-  static const _completed = 2;
-  static const _total = 3;
+  final int completed;
+  final int total;
 
   @override
   Widget build(BuildContext context) {
+    final done = completed.clamp(0, total);
+    final isComplete = total > 0 && completed >= total;
+    final progress = total > 0 ? done / total : 0.0;
+    final subtitle = isComplete
+        ? 'Meta diaria completada'
+        : '$done de $total actividades completadas';
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -28,18 +39,20 @@ class DailyGoalCard extends StatelessWidget {
               color: AppColors.gold.withValues(alpha: 0.12),
               shape: BoxShape.circle,
             ),
-            child: const Icon(
-              Icons.emoji_events_rounded,
+            child: Icon(
+              isComplete
+                  ? Icons.check_rounded
+                  : Icons.emoji_events_rounded,
               color: AppColors.gold,
               size: 22,
             ),
           ),
           const SizedBox(width: 12),
-          const Expanded(
+          Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
+                const Text(
                   'Meta diaria',
                   style: TextStyle(
                     color: AppColors.textPrimary,
@@ -47,12 +60,12 @@ class DailyGoalCard extends StatelessWidget {
                     fontWeight: FontWeight.w700,
                   ),
                 ),
-                SizedBox(height: 4),
+                const SizedBox(height: 4),
                 Text(
-                  '2 de 3 actividades completadas',
+                  subtitle,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
+                  style: const TextStyle(
                     color: AppColors.textMuted,
                     fontSize: 10.5,
                     fontWeight: FontWeight.w500,
@@ -63,7 +76,7 @@ class DailyGoalCard extends StatelessWidget {
           ),
           const SizedBox(width: 12),
           Semantics(
-            label: 'Meta diaria: 2 de 3 actividades completadas',
+            label: 'Meta diaria: $done de $total actividades completadas',
             child: SizedBox(
               width: 50,
               height: 50,
@@ -72,11 +85,11 @@ class DailyGoalCard extends StatelessWidget {
                 children: [
                   CustomPaint(
                     size: const Size.square(50),
-                    painter: _GoalRingPainter(_completed / _total),
+                    painter: _GoalRingPainter(progress),
                   ),
-                  const Text(
-                    '2/3',
-                    style: TextStyle(
+                  Text(
+                    '$done/$total',
+                    style: const TextStyle(
                       color: AppColors.textPrimary,
                       fontSize: 11,
                       fontWeight: FontWeight.w700,
@@ -119,7 +132,7 @@ class _GoalRingPainter extends CustomPainter {
     canvas.drawArc(
       arcRect,
       -math.pi / 2,
-      2 * math.pi * progress,
+      2 * math.pi * progress.clamp(0.0, 1.0),
       false,
       progressPaint,
     );

@@ -5,12 +5,22 @@ import '../../../shared/utils/formatters.dart';
 import '../../../shared/widgets/flow_logo.dart';
 
 class HomeHeader extends StatelessWidget {
-  const HomeHeader({super.key, required this.coins});
+  const HomeHeader({
+    super.key,
+    required this.displayName,
+    required this.streakDays,
+    required this.coins,
+  });
 
+  final String displayName;
+  final int streakDays;
   final int coins;
 
   @override
   Widget build(BuildContext context) {
+    final name = displayName.trim();
+    final greeting = name.isEmpty ? '¡Hola, estudiante!' : '¡Hola, $name!';
+
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -32,7 +42,7 @@ class HomeHeader extends StatelessWidget {
                 fit: BoxFit.scaleDown,
                 alignment: Alignment.centerLeft,
                 child: Text(
-                  '¡Hola, estudiante!',
+                  greeting,
                   maxLines: 1,
                   style: Theme.of(context).textTheme.displaySmall,
                 ),
@@ -49,10 +59,10 @@ class HomeHeader extends StatelessWidget {
             Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const _MetricChip(
+                _MetricChip(
                   icon: Icons.local_fire_department_rounded,
                   iconColor: AppColors.streak,
-                  value: '7',
+                  value: '$streakDays',
                 ),
                 const SizedBox(width: 6),
                 _MetricChip(

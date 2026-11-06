@@ -107,7 +107,7 @@ void main() {
 
     expect(auth.signInCalls, 1);
     expect(auth.lastEmail, 'alumno@flow.app');
-    expect(find.text('¡Hola, estudiante!'), findsOneWidget);
+    expect(find.text('¡Hola, Estudiante Flow!'), findsOneWidget);
     expect(find.text('Entrar'), findsNothing);
     expect(tester.takeException(), isNull);
   });
@@ -177,7 +177,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(auth.signUpCalls, 1);
-    expect(find.text('¡Hola, estudiante!'), findsOneWidget);
+    expect(find.text('¡Hola, Estudiante Flow!'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
@@ -200,7 +200,7 @@ void main() {
     expect(find.text('Revisa tu\ncorreo.'), findsOneWidget);
     expect(find.text('nuevo@flow.app'), findsOneWidget);
     expect(find.text('Ir a iniciar sesión'), findsOneWidget);
-    expect(find.text('¡Hola, estudiante!'), findsNothing);
+    expect(find.text('¡Hola, Estudiante Flow!'), findsNothing);
     expect(tester.takeException(), isNull);
   });
 

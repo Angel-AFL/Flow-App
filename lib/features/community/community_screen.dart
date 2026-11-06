@@ -92,7 +92,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
           return Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.red.withOpacity(0.1),
+              color: Colors.red.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Text('Error: ${snapshot.error}', style: const TextStyle(color: Colors.red)),
@@ -105,7 +105,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
             child: Center(
               child: Column(
                 children: [
-                  Icon(Icons.feed_outlined, size: 64, color: AppColors.textSecondary.withOpacity(0.5)),
+                  Icon(Icons.feed_outlined, size: 64, color: AppColors.textSecondary.withValues(alpha: 0.5)),
                   const SizedBox(height: 16),
                   const Text('Feed vacío', style: TextStyle(color: AppColors.textSecondary, fontSize: 16)),
                 ],
@@ -189,11 +189,14 @@ class _CommunityScreenState extends State<CommunityScreen> {
         ),
         const SizedBox(height: 24),
         Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text(
-              'Retos de la comunidad',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+            const Expanded(
+              child: Text(
+                'Retos de la comunidad',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+              ),
             ),
             TextButton(
               onPressed: () => _showFeedback('Filtros próximamente'),
@@ -221,7 +224,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
                 decoration: BoxDecoration(
                   color: AppColors.surfaceElevated,
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: Color(reto['color'] as int).withOpacity(0.3)),
+                  border: Border.all(color: Color(reto['color'] as int).withValues(alpha: 0.3)),
                 ),
                 padding: const EdgeInsets.all(16),
                 child: Column(
@@ -241,7 +244,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
-                        color: Color(reto['color'] as int).withOpacity(0.1),
+                        color: Color(reto['color'] as int).withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
