@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:flow_app/app.dart';
+import 'package:flow_app/features/profile/repositories/profile_repository.dart';
 
 import 'helpers/fake_auth_repository.dart';
 import 'helpers/fake_learning_repository.dart';
@@ -12,6 +13,7 @@ void main() {
   Future<void> pumpWelcome(
     WidgetTester tester, {
     Size size = const Size(390, 844),
+    FakeProfileRepository? profileRepository,
   }) async {
     tester.view.physicalSize = size;
     tester.view.devicePixelRatio = 1.0;
@@ -22,32 +24,84 @@ void main() {
       FlowApp(
         authRepository: FakeAuthRepository(user: demoUser),
         learningRepository: FakeLearningRepository(),
-        profileRepository: FakeProfileRepository(),
+        profileRepository: profileRepository ?? FakeProfileRepository(),
         storeRepository: FakeStoreRepository(),
       ),
     );
+    await tester.pumpAndSettle();
   }
 
   Future<void> pumpApp(
     WidgetTester tester, {
     Size size = const Size(390, 844),
+    FakeProfileRepository? profileRepository,
   }) async {
-    await pumpWelcome(tester, size: size);
+    await pumpWelcome(
+      tester,
+      size: size,
+      profileRepository: profileRepository,
+    );
   }
 
-  testWidgets('renderiza el contenido estático de Inicio', (tester) async {
+  testWidgets('renderiza el contenido real de Inicio', (tester) async {
     await pumpApp(tester);
 
-    expect(find.text('¡Hola, estudiante!'), findsOneWidget);
-    expect(find.text('Fundamentos de diagramas de flujo'), findsOneWidget);
-    expect(find.text('38%'), findsOneWidget);
+    expect(find.text('¡Hola, Estudiante Flow!'), findsOneWidget);
+    expect(find.text('Diagramas lineales'), findsOneWidget);
+    expect(find.text('50%'), findsOneWidget);
+    expect(find.textContaining('Tu primer diagrama'), findsOneWidget);
     expect(find.text('Continuar lección'), findsOneWidget);
     expect(find.text('1,250'), findsOneWidget);
     expect(find.text('8'), findsOneWidget);
-    expect(find.text('7 días'), findsOneWidget);
-    expect(find.text('Tu primer diagrama'), findsOneWidget);
+    expect(find.text('Racha'), findsOneWidget);
+    expect(find.text('7'), findsNWidgets(2));
+    expect(find.text('Ver perfil'), findsOneWidget);
     expect(find.text('Meta diaria'), findsOneWidget);
+    expect(find.text('2 de 3 actividades completadas'), findsOneWidget);
     expect(find.text('2/3'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('Inicio abre la lección pendiente', (tester) async {
+    await pumpApp(tester);
+
+    await tester.tap(find.text('Continuar lección'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('LECCIÓN 3'), findsOneWidget);
+    expect(find.text('Aprobar diagrama'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('Inicio muestra la meta diaria completada', (tester) async {
+    await pumpApp(
+      tester,
+      profileRepository: FakeProfileRepository(todayActivityCount: 4),
+    );
+
+    expect(find.text('Meta diaria completada'), findsOneWidget);
+    expect(find.text('3/3'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('Inicio muestra error y permite reintentar', (tester) async {
+    final profile = FakeProfileRepository(
+      statsFailure: const ProfileFailure(
+        'No pudimos cargar tu progreso. Inténtalo de nuevo.',
+      ),
+    );
+
+    await pumpApp(tester, profileRepository: profile);
+
+    expect(find.text('No pudimos cargar tu inicio'), findsOneWidget);
+    expect(find.text('Reintentar'), findsOneWidget);
+
+    profile.statsFailure = null;
+    await tester.tap(find.text('Reintentar'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('¡Hola, Estudiante Flow!'), findsOneWidget);
+    expect(profile.statsCalls, greaterThanOrEqualTo(2));
     expect(tester.takeException(), isNull);
   });
 
@@ -63,7 +117,7 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('renderiza el feed de Comunidad', (tester) async {
+  testWidgets('renderiza la comunidad y su workshop', (tester) async {
     await pumpApp(tester);
 
     await tester.tap(find.text('Comunidad'));
@@ -72,18 +126,18 @@ void main() {
     expect(find.text('Para ti'), findsOneWidget);
     expect(find.text('Siguiendo'), findsOneWidget);
     expect(find.text('Workshop'), findsOneWidget);
+
+    await tester.tap(find.text('Workshop'));
+    await tester.pumpAndSettle();
+
     expect(find.text('Reto: semáforo inteligente'), findsOneWidget);
-    expect(find.text('CodeAlex'), findsOneWidget);
-    expect(find.text('Mi primer diagrama'), findsOneWidget);
-    expect(find.text('¿Es un número positivo?'), findsOneWidget);
-    expect(find.text('Mostrar mensaje'), findsOneWidget);
-    expect(find.text('Es > 0'), findsOneWidget);
-    expect(find.text('48'), findsOneWidget);
-    expect(find.text('Remix'), findsNWidgets(2));
+    expect(find.text('Bucle infinito'), findsOneWidget);
+    expect(find.textContaining('CodeAlex'), findsOneWidget);
+    expect(find.text('Cajero Automático'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('las pestañas de Comunidad cambian el feed', (tester) async {
+  testWidgets('las pestañas de Comunidad cambian la vista', (tester) async {
     await pumpApp(tester);
 
     await tester.tap(find.text('Comunidad'));
@@ -92,38 +146,31 @@ void main() {
     await tester.tap(find.text('Siguiendo'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Suma hasta 10'), findsOneWidget);
-    expect(find.text('Mi primer diagrama'), findsNothing);
+    expect(find.text('Aún no sigues a nadie'), findsOneWidget);
 
     await tester.tap(find.text('Workshop'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Clasifica el número'), findsOneWidget);
-    expect(find.text('Suma hasta 10'), findsNothing);
+    expect(find.text('Bucle infinito'), findsOneWidget);
+    expect(find.text('Aún no sigues a nadie'), findsNothing);
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('el like actualiza el contador y Remix muestra feedback', (
+  testWidgets('el workshop muestra feedback al abrir un reto', (
     tester,
   ) async {
     await pumpApp(tester);
 
     await tester.tap(find.text('Comunidad'));
     await tester.pumpAndSettle();
-
-    expect(find.text('48'), findsOneWidget);
-
-    await tester.tap(find.byIcon(Icons.favorite_border_rounded).first);
+    await tester.tap(find.text('Workshop'));
     await tester.pumpAndSettle();
 
-    expect(find.text('49'), findsOneWidget);
-    expect(find.byIcon(Icons.favorite_rounded), findsOneWidget);
-
-    await tester.tap(find.text('Remix').first);
+    await tester.tap(find.text('Bucle infinito'));
     await tester.pump();
 
     expect(
-      find.text('El Remix estará disponible próximamente.'),
+      find.text('Cargando nivel: Bucle infinito...'),
       findsOneWidget,
     );
     expect(tester.takeException(), isNull);
@@ -149,7 +196,7 @@ void main() {
   testWidgets('Inicio no desborda en una pantalla pequeña', (tester) async {
     await pumpApp(tester, size: const Size(320, 640));
 
-    expect(find.text('¡Hola, estudiante!'), findsOneWidget);
+    expect(find.text('¡Hola, Estudiante Flow!'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 }

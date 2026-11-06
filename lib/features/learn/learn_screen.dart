@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 import '../../shared/widgets/flow_page_header.dart';
 import '../store/controllers/wallet_controller.dart';
-import 'lesson_screen.dart';
+import 'lesson_flow.dart';
 import 'models/learning_models.dart';
 import 'repositories/learning_repository.dart';
 import 'widgets/learning_path.dart';
@@ -15,11 +15,13 @@ class LearnScreen extends StatefulWidget {
     required this.userId,
     required this.repository,
     required this.wallet,
+    this.refreshToken = 0,
   });
 
   final String userId;
   final LearningRepository repository;
   final WalletController wallet;
+  final int refreshToken;
 
   @override
   State<LearnScreen> createState() => _LearnScreenState();
@@ -35,6 +37,15 @@ class _LearnScreenState extends State<LearnScreen> {
   void initState() {
     super.initState();
     _load();
+  }
+
+  @override
+  void didUpdateWidget(covariant LearnScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    if (widget.refreshToken != oldWidget.refreshToken) {
+      _load(showLoading: false);
+    }
   }
 
   Future<void> _load({bool showLoading = true}) async {
@@ -97,32 +108,30 @@ class _LearnScreenState extends State<LearnScreen> {
       return;
     }
 
-    final approved = await Navigator.of(context).push<bool>(
-      MaterialPageRoute<bool>(
-        builder: (_) => LessonScreen(
-          lesson: lesson.toDiagramLesson(),
-          isReview: lesson.completed,
-        ),
-      ),
-    );
-
-    if (!mounted || approved != true) {
-      return;
-    }
-
     setState(() => _busyLessonId = lesson.id);
 
     try {
-      final result = await widget.repository.completeLesson(
-        lessonId: lesson.id,
-        localDate: DateTime.now(),
+      final flow = await runLessonFlow(
+        context: context,
+        lesson: lesson,
+        repository: widget.repository,
+        wallet: widget.wallet,
       );
 
-      if (!mounted) {
+      if (!mounted || !flow.approved) {
         return;
       }
 
-      widget.wallet.updateCoins(result.coins);
+      final error = flow.errorMessage;
+      if (error != null) {
+        _showFeedback(error);
+        return;
+      }
+
+      final result = flow.completion;
+      if (result == null) {
+        return;
+      }
 
       if (result.alreadyCompleted) {
         _showFeedback('Repaso guardado. Esta lección ya estaba completada.');
@@ -134,16 +143,6 @@ class _LearnScreenState extends State<LearnScreen> {
       }
 
       await _load(showLoading: false);
-    } on LearningFailure catch (failure) {
-      if (mounted) {
-        _showFeedback(failure.message);
-      }
-    } catch (_) {
-      if (mounted) {
-        _showFeedback(
-          'La lección quedó completada, pero no pudimos guardar el progreso.',
-        );
-      }
     } finally {
       if (mounted) {
         setState(() => _busyLessonId = null);

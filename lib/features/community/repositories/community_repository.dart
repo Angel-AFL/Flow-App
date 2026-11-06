@@ -4,7 +4,7 @@ import '../models/community_post.dart';
 import '../models/community_post.dart' as model_spec show DiagramPreviewType;
 
 class CommunityRepository {
-  final _supabase = Supabase.instance.client;
+  SupabaseClient get _supabase => Supabase.instance.client;
 
   Future<List<CommunityPost>> getPosts() async {
     try {

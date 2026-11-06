@@ -36,6 +36,8 @@ class AppShell extends StatefulWidget {
 
 class _AppShellState extends State<AppShell> {
   int _currentIndex = 0;
+  int _homeRefreshToken = 0;
+  int _learnRefreshToken = 0;
   int _storeRefreshToken = 0;
   int _profileRefreshToken = 0;
   late final WalletController _wallet;
@@ -57,11 +59,21 @@ class _AppShellState extends State<AppShell> {
   }
 
   List<Widget> get _screens => [
-    HomeScreen(wallet: _wallet),
+    HomeScreen(
+      userId: widget.user.id,
+      wallet: _wallet,
+      learningRepository: widget.learningRepository,
+      profileRepository: widget.profileRepository,
+      refreshToken: _homeRefreshToken,
+      onOpenLearn: () => _selectTab(1),
+      onOpenProfile: () => _selectTab(4),
+      onProgressChanged: _handleProgressChanged,
+    ),
     LearnScreen(
       userId: widget.user.id,
       repository: widget.learningRepository,
       wallet: _wallet,
+      refreshToken: _learnRefreshToken,
     ),
     const CommunityScreen(),
     StoreScreen(
@@ -82,6 +94,12 @@ class _AppShellState extends State<AppShell> {
 
   void _selectTab(int index) {
     setState(() {
+      if (index == 0) {
+        _homeRefreshToken++;
+      }
+      if (index == 1) {
+        _learnRefreshToken++;
+      }
       if (index == 3) {
         _storeRefreshToken++;
       }
@@ -89,6 +107,13 @@ class _AppShellState extends State<AppShell> {
         _profileRefreshToken++;
       }
       _currentIndex = index;
+    });
+  }
+
+  void _handleProgressChanged() {
+    setState(() {
+      _learnRefreshToken++;
+      _profileRefreshToken++;
     });
   }
 

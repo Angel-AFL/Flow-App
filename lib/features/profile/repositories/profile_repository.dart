@@ -13,6 +13,8 @@ class ProfileFailure implements Exception {
 abstract interface class ProfileRepository {
   Future<ProfileSnapshot> loadProfile(String userId);
 
+  Future<ProfileStats> loadStats(String userId);
+
   Future<UserProfile> updateProfile({
     required String userId,
     required ProfileEdit edit,
