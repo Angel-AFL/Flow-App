@@ -20,6 +20,7 @@ class _LessonScreenState extends State<LessonScreen> {
   late final List<DiagramBlock> _trayOrder;
   late List<DiagramBlock> _availableBlocks;
   late List<DiagramBlock?> _placedBlocks;
+  String? _selectedOptionId;
   bool _approved = false;
   String? _error;
 
@@ -40,7 +41,32 @@ class _LessonScreenState extends State<LessonScreen> {
     super.dispose();
   }
 
-  bool get _isComplete => _placedBlocks.every((block) => block != null);
+  bool get _isComplete {
+    if (!widget.lesson.isOrderExercise) {
+      return _selectedOptionId != null;
+    }
+
+    return _placedBlocks.every((block) => block != null);
+  }
+
+  bool get _canReset {
+    if (!widget.lesson.isOrderExercise) {
+      return _selectedOptionId != null;
+    }
+
+    return _placedBlocks.any((block) => block != null);
+  }
+
+  void _selectOption(String optionId) {
+    if (_approved) {
+      return;
+    }
+
+    setState(() {
+      _selectedOptionId = optionId;
+      _error = null;
+    });
+  }
 
   void _placeBlock(DiagramBlock block) {
     if (_approved) {
@@ -88,20 +114,24 @@ class _LessonScreenState extends State<LessonScreen> {
         null,
       );
       _availableBlocks = List.of(_trayOrder);
+      _selectedOptionId = null;
       _error = null;
     });
   }
 
   void _checkDiagram() {
-    final isCorrect = widget.lesson.isCorrect(_placedBlocks);
+    final isCorrect = widget.lesson.isOrderExercise
+        ? widget.lesson.isCorrect(_placedBlocks)
+        : widget.lesson.isCorrectChoice(_selectedOptionId);
 
     setState(() {
       if (isCorrect) {
         _approved = true;
         _error = null;
       } else {
-        _error =
-            'Casi. Revisa el orden: el flujo empieza en Inicio y termina en Fin.';
+        _error = widget.lesson.isOrderExercise
+            ? 'Casi. Revisa el orden: el flujo empieza en Inicio y termina en Fin.'
+            : 'Casi. Vuelve a leer el concepto y prueba otra opción.';
       }
     });
 
@@ -188,14 +218,22 @@ class _LessonScreenState extends State<LessonScreen> {
                               _ConceptPanel(concept: widget.lesson.concept),
                             ],
                             const SizedBox(height: 18),
-                            LessonDiagramBuilder(
-                              lesson: widget.lesson,
-                              placedBlocks: _placedBlocks,
-                              availableBlocks: _availableBlocks,
-                              onPlace: _placeBlock,
-                              onRemove: _removeBlock,
-                              enabled: !_approved,
-                            ),
+                            if (widget.lesson.isOrderExercise)
+                              LessonDiagramBuilder(
+                                lesson: widget.lesson,
+                                placedBlocks: _placedBlocks,
+                                availableBlocks: _availableBlocks,
+                                onPlace: _placeBlock,
+                                onRemove: _removeBlock,
+                                enabled: !_approved,
+                              )
+                            else
+                              _ChoiceExercise(
+                                lesson: widget.lesson,
+                                selectedOptionId: _selectedOptionId,
+                                enabled: !_approved,
+                                onSelect: _selectOption,
+                              ),
                             if (_error != null) ...[
                               const SizedBox(height: 14),
                               _ErrorPanel(message: _error!),
@@ -228,15 +266,16 @@ class _LessonScreenState extends State<LessonScreen> {
                                       fontWeight: FontWeight.w800,
                                     ),
                                   ),
-                                  child: const Text('Aprobar diagrama'),
+                                  child: Text(
+                                    widget.lesson.isOrderExercise
+                                        ? 'Aprobar diagrama'
+                                        : 'Comprobar respuesta',
+                                  ),
                                 ),
                               ),
                               const SizedBox(height: 4),
                               TextButton.icon(
-                                onPressed:
-                                    _placedBlocks.any((block) => block != null)
-                                    ? _reset
-                                    : null,
+                                onPressed: _canReset ? _reset : null,
                                 icon: const Icon(
                                   Icons.refresh_rounded,
                                   size: 17,
@@ -262,6 +301,185 @@ class _LessonScreenState extends State<LessonScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _ChoiceExercise extends StatelessWidget {
+  const _ChoiceExercise({
+    required this.lesson,
+    required this.selectedOptionId,
+    required this.enabled,
+    required this.onSelect,
+  });
+
+  final DiagramLesson lesson;
+  final String? selectedOptionId;
+  final bool enabled;
+  final ValueChanged<String> onSelect;
+
+  @override
+  Widget build(BuildContext context) {
+    final snippet = lesson.snippet;
+    final isTrace = lesson.exercise == LessonExerciseKind.trace;
+
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 18),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.border.withValues(alpha: 0.7)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            isTrace ? 'TRAZA EL FLUJO' : 'TU RESPUESTA',
+            style: const TextStyle(
+              color: AppColors.secondary,
+              fontSize: 9.5,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 1.1,
+            ),
+          ),
+          if (snippet != null && snippet.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+              decoration: BoxDecoration(
+                color: const Color(0xFF0D1A2A),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: AppColors.border),
+              ),
+              child: Text(
+                snippet,
+                style: const TextStyle(
+                  color: AppColors.textPrimary,
+                  fontSize: 12,
+                  height: 1.5,
+                  fontFamily: 'monospace',
+                ),
+              ),
+            ),
+          ],
+          const SizedBox(height: 14),
+          Text(
+            lesson.question.isNotEmpty ? lesson.question : lesson.instructions,
+            style: const TextStyle(
+              color: AppColors.textPrimary,
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
+              height: 1.35,
+            ),
+          ),
+          const SizedBox(height: 14),
+          for (var index = 0; index < lesson.options.length; index++) ...[
+            _OptionTile(
+              index: index,
+              option: lesson.options[index],
+              selected: selectedOptionId == lesson.options[index].id,
+              enabled: enabled,
+              onTap: () => onSelect(lesson.options[index].id),
+            ),
+            if (index < lesson.options.length - 1) const SizedBox(height: 8),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _OptionTile extends StatelessWidget {
+  const _OptionTile({
+    required this.index,
+    required this.option,
+    required this.selected,
+    required this.enabled,
+    required this.onTap,
+  });
+
+  final int index;
+  final LessonOption option;
+  final bool selected;
+  final bool enabled;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final letter = String.fromCharCode(65 + index);
+
+    return Semantics(
+      button: true,
+      selected: selected,
+      label: 'Opción $letter: ${option.label}',
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: enabled ? onTap : null,
+          borderRadius: BorderRadius.circular(14),
+          child: Ink(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
+            decoration: BoxDecoration(
+              color: selected
+                  ? AppColors.primary.withValues(alpha: 0.1)
+                  : const Color(0xFF0D1A2A),
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(
+                color: selected ? AppColors.primary : AppColors.border,
+                width: selected ? 1.5 : 1,
+              ),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 28,
+                  height: 28,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: selected
+                        ? AppColors.primary.withValues(alpha: 0.18)
+                        : AppColors.surfaceElevated,
+                    border: Border.all(
+                      color: selected ? AppColors.primary : AppColors.border,
+                    ),
+                  ),
+                  child: Text(
+                    letter,
+                    style: TextStyle(
+                      color: selected ? AppColors.primary : AppColors.textMuted,
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    option.label,
+                    style: TextStyle(
+                      color: selected
+                          ? AppColors.textPrimary
+                          : AppColors.textSecondary,
+                      fontSize: 13,
+                      fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                      height: 1.3,
+                    ),
+                  ),
+                ),
+                if (selected) ...[
+                  const SizedBox(width: 8),
+                  const Icon(
+                    Icons.check_circle_rounded,
+                    color: AppColors.primary,
+                    size: 20,
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -452,6 +670,19 @@ class _SuccessPanel extends StatelessWidget {
               fontWeight: FontWeight.w500,
             ),
           ),
+          if (lesson.explanation.isNotEmpty) ...[
+            const SizedBox(height: 10),
+            Text(
+              lesson.explanation,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                color: AppColors.textMuted,
+                fontSize: 11.5,
+                fontWeight: FontWeight.w500,
+                height: 1.4,
+              ),
+            ),
+          ],
           const SizedBox(height: 10),
           if (isReview)
             const Text(

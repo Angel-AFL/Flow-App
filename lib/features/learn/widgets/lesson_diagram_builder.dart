@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 import '../../../core/theme/app_colors.dart';
@@ -221,6 +223,10 @@ class _DiagramNode extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (block.kind == DiagramBlockKind.decision) {
+      return _DecisionNode(block: block, showRemoveHint: showRemoveHint);
+    }
+
     final color = _colorFor(block.kind);
     final isPill = block.kind != DiagramBlockKind.process;
 
@@ -251,6 +257,82 @@ class _DiagramNode extends StatelessWidget {
           if (showRemoveHint) ...[
             const SizedBox(width: 7),
             Icon(Icons.close_rounded, size: 14, color: color),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _DecisionNode extends StatelessWidget {
+  const _DecisionNode({required this.block, this.showRemoveHint = false});
+
+  final DiagramBlock block;
+  final bool showRemoveHint;
+
+  @override
+  Widget build(BuildContext context) {
+    const color = AppColors.gold;
+    final branchLabels = [
+      if (block.yesLabel != null && block.yesLabel!.isNotEmpty) block.yesLabel!,
+      if (block.noLabel != null && block.noLabel!.isNotEmpty) block.noLabel!,
+    ];
+
+    return Container(
+      constraints: const BoxConstraints(maxWidth: 260),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: color.withValues(alpha: 0.75), width: 1.4),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Transform.rotate(
+            angle: math.pi / 4,
+            child: Container(
+              width: 15,
+              height: 15,
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.18),
+                border: Border.all(color: color, width: 1.2),
+              ),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Flexible(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  block.label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: AppColors.textPrimary,
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                if (branchLabels.isNotEmpty)
+                  Text(
+                    branchLabels.join(' / '),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: color.withValues(alpha: 0.9),
+                      fontSize: 8.5,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          if (showRemoveHint) ...[
+            const SizedBox(width: 7),
+            const Icon(Icons.close_rounded, size: 14, color: color),
           ],
         ],
       ),
@@ -292,7 +374,13 @@ class _BlockButton extends StatelessWidget {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.add_rounded, size: 15, color: color),
+                Icon(
+                  block.kind == DiagramBlockKind.decision
+                      ? Icons.call_split_rounded
+                      : Icons.add_rounded,
+                  size: 15,
+                  color: color,
+                ),
                 const SizedBox(width: 6),
                 Text(
                   block.label,
@@ -337,6 +425,7 @@ Color _colorFor(DiagramBlockKind kind) {
   return switch (kind) {
     DiagramBlockKind.start => AppColors.primary,
     DiagramBlockKind.process => AppColors.secondary,
+    DiagramBlockKind.decision => AppColors.gold,
     DiagramBlockKind.end => AppColors.gold,
   };
 }
