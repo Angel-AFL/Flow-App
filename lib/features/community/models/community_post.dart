@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-
 import '../../../shared/models/diagram_spec.dart';
-
 export '../../../shared/models/diagram_spec.dart';
 
 class CommunityPost {
@@ -17,6 +15,8 @@ class CommunityPost {
     required this.likes,
     required this.comments,
     required this.diagram,
+    this.imageUrl,
+    this.location,
   });
 
   final String id;
@@ -30,4 +30,7 @@ class CommunityPost {
   final int likes;
   final int comments;
   final DiagramSpec diagram;
+  
+  final String? imageUrl;
+  final String? location;
 }
